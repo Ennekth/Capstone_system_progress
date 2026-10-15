@@ -9,7 +9,7 @@
         <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200">
             <div>
                 <h1 class="text-xl font-bold">User Management</h1>
-                <p class="text-sm text-gray-500 mt-1">Manage admin, manager, and staff accounts</p>
+                <p class="text-sm text-gray-500 mt-1">Manage admin, manager, warehouse staff and staff accounts</p>
             </div>
 
             <a href="{{ route('admin.users.create') }}"

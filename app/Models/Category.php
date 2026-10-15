@@ -12,4 +12,12 @@ class Category extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    public static function getOrCreateDefault(): self
+    {
+        return static::firstOrCreate(
+            ['name' => 'Uncategorized'],
+            ['type' => 'product']
+        );
+    }
 }

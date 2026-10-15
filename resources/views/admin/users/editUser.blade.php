@@ -103,6 +103,7 @@
                     <select name="role" id="role"
                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
                                    focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
+                        <option value="warehouse_staff" {{ old('role', $user->role) === 'warehouse_staff' ? 'selected' : '' }}>Warehouse Staff</option>
                         <option value="staff" {{ old('role', $user->role) === 'staff' ? 'selected' : '' }}>Staff</option>
                         <option value="manager" {{ old('role', $user->role) === 'manager' ? 'selected' : '' }}>Manager</option>
                         <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Admin</option>

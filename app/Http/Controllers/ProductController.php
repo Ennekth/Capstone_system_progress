@@ -9,11 +9,39 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function index()
-    {
-        $products = Product::with('category')->orderBy('product_name')->get();
-        return view('admin.products.productManagement', ['products' => $products]);
+   public function index(Request $request)
+{
+    $query = Product::with('category');
+
+    if ($request->filled('search')) {
+        $searchTerms = array_filter(explode(' ', trim($request->search)));
+        $query->where(function ($q) use ($searchTerms) {
+            foreach ($searchTerms as $term) {
+                $q->where('product_name', 'like', '%' . $term . '%');
+            }
+        });
     }
+
+    if ($request->filled('category_id')) {
+        $query->where('category_id', $request->category_id);
+    }
+
+    $sort = $request->get('sort', 'product_name');
+    $direction = $request->get('direction', 'asc');
+
+    $allowedSorts = ['product_name', 'store_quantity', 'warehouse_quantity', 'selling_price', 'purchase_cost', 'created_at'];
+    if (!in_array($sort, $allowedSorts)) {
+        $sort = 'product_name';
+    }
+
+    $products = $query->orderBy($sort, $direction === 'desc' ? 'desc' : 'asc')
+        ->paginate(20)
+        ->withQueryString();
+
+    $categories = Category::orderBy('name')->get();
+
+    return view('admin.products.productManagement', compact('products', 'categories', 'sort', 'direction'));
+}
 
     public function create()
     {
@@ -28,9 +56,10 @@ class ProductController extends Controller
             'product_description' => ['nullable', 'string'],
             'purchase_cost'       => ['required', 'numeric', 'min:0'],
             'selling_price'       => ['required', 'numeric', 'min:0'],
-            'quantity'            => ['nullable', 'integer', 'min:0'],
+            'store_quantity'      => ['nullable', 'integer', 'min:0'],
+            'warehouse_quantity'  => ['nullable', 'integer', 'min:0'],
             'reorder_point'       => ['nullable', 'integer', 'min:0'],
-            'category_id'         => ['required', 'exists:categories,id'],
+            'category_id'         => ['nullable', 'exists:categories,id'],
             'approx_volume'       => ['nullable', 'string', 'max:255'],
             'product_image'       => ['nullable', 'image', 'max:2048'],
         ]);
@@ -40,10 +69,11 @@ class ProductController extends Controller
         if ($exists) {
             return back()->withErrors(['product_name' => 'A product with this name already exists.'])->withInput();
         }
-
+        $data['category_id'] = $data['category_id'] ?? Category::getOrCreateDefault()->id;
         $data['product_name'] = strip_tags($data['product_name']);
         $data['product_description'] = strip_tags($data['product_description'] ?? '');
-        $data['quantity'] = $data['quantity'] ?? 0;
+        $data['store_quantity'] = $data['store_quantity'] ?? 0;
+        $data['warehouse_quantity'] = $data['warehouse_quantity'] ?? 0;
 
         if ($request->hasFile('product_image')) {
             $data['product_image'] = $request->file('product_image')->store('products', 'public');
@@ -67,9 +97,10 @@ class ProductController extends Controller
             'product_description' => ['nullable', 'string'],
             'purchase_cost'       => ['required', 'numeric', 'min:0'],
             'selling_price'       => ['required', 'numeric', 'min:0'],
-            'quantity'            => ['required', 'integer', 'min:0'],
+            'store_quantity'      => ['nullable', 'integer', 'min:0'],
+            'warehouse_quantity'  => ['nullable', 'integer', 'min:0'],
             'reorder_point'       => ['nullable', 'integer', 'min:0'],
-            'category_id'         => ['required', 'exists:categories,id'],
+            'category_id'         => ['nullable', 'exists:categories,id'],
             'approx_volume'       => ['nullable', 'string', 'max:255'],
             'product_image'       => ['nullable', 'image', 'max:2048'],
         ]);
@@ -83,7 +114,7 @@ class ProductController extends Controller
             }
             $data['product_image'] = $request->file('product_image')->store('products', 'public');
         }
-
+        $data['category_id'] = $data['category_id'] ?? Category::getOrCreateDefault()->id;
         $product->update($data);
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated successfully.');

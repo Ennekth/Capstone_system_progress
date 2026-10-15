@@ -49,15 +49,14 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">
-                        Category
+                        Category <span class="text-gray-400">(optional)</span>
                     </label>
                     <select name="category_id" id="category_id"
                             class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                                   focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
-                        <option value="">Select a category</option>
+                                focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
+                        <option value="">Uncategorized (default)</option>
                         @foreach ($categories as $category)
-                            <option value="{{ $category->id }}"
-                                {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                            <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                 {{ $category->name }} ({{ ucfirst($category->type) }})
                             </option>
                         @endforeach
@@ -71,6 +70,15 @@
                     <input type="text" name="approx_volume" id="approx_volume" value="{{ old('approx_volume', $product->approx_volume) }}"
                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
                                   focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
+                </div>
+                {{-- Di pa sure which one to use --}}
+                <div>
+                    <label for="volume_liters" class="block text-sm font-medium text-gray-700 mb-1">
+                        Volume (liters) <span class="text-gray-400">(optional — used for holding cost calculation)</span>
+                    </label>
+                    <input type="number" step="0.01" min="0" name="volume_liters" id="volume_liters"
+                        value="{{ old('volume_liters') }}"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                 </div>
             </div>
 
@@ -98,14 +106,23 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">
-                        Quantity
+                    <label for="store_quantity" class="block text-sm font-medium text-gray-700 mb-1">
+                        Store Quantity
                     </label>
-                    <input type="number" min="0" name="quantity" id="quantity" value="{{ old('quantity', $product->quantity) }}"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
-                    <p class="text-xs text-gray-400 mt-1">To restock, use the Restock feature instead of editing this directly.</p>
+                    <input type="number" min="0" name="store_quantity" id="store_quantity"
+                        value="{{ old('store_quantity', 0) }}"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                 </div>
+
+                <div>
+                    <label for="warehouse_quantity" class="block text-sm font-medium text-gray-700 mb-1">
+                        Warehouse Quantity
+                    </label>
+                    <input type="number" min="0" name="warehouse_quantity" id="warehouse_quantity"
+                        value="{{ old('warehouse_quantity', 0) }}"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                </div>
+            </div>
 
                 <div>
                     <label for="reorder_point" class="block text-sm font-medium text-gray-700 mb-1">

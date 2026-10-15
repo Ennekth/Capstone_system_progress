@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('suffix')->nullable();
 
             // Role & status
-            $table->enum('role', ['admin', 'manager', 'staff'])->default('staff');
+            $table->enum('role', ['admin', 'manager', 'staff', 'warehouse_staff'])->default('staff');
             $table->boolean('is_active')->default(true);
 
             // Laravel defaults (kept)

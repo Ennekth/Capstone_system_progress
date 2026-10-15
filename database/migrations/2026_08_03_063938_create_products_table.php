@@ -17,11 +17,13 @@ return new class extends Migration
             $table->longText('product_description');
             $table->decimal('purchase_cost', 10, 2);
             $table->decimal('selling_price', 10, 2);
-            $table->integer('quantity')->default(0);
+            $table->integer('store_quantity')->default(0);
+            $table->integer('warehouse_quantity')->default(0);
             $table->integer('reorder_point')->nullable();
             $table->string('product_image')->nullable();
             $table->foreignId('category_id')->constrained('categories')->onDelete('restrict');
             $table->string('approx_volume')->nullable();
+            $table->decimal('storage_volume_cbm', 8, 4)->nullable();
             $table->timestamps();
         });
     }

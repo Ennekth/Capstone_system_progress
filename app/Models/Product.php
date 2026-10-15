@@ -2,25 +2,39 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'product_name',
         'product_description',
         'purchase_cost',
         'selling_price',
-        'quantity',
+        'store_quantity',
+        'warehouse_quantity',
         'reorder_point',
+        'product_image',
         'category_id',
         'approx_volume',
-        'product_image',
     ];
 
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function demandRecords()
+    {
+        return $this->hasMany(DemandRecord::class);
+    }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
     }
 
     public function isLowStock(): bool
@@ -29,11 +43,21 @@ class Product extends Model
             return false;
         }
 
-        return $this->quantity <= $this->reorder_point;
+        return $this->store_quantity <= $this->reorder_point;
     }
 
-    public function demandRecords()
+    public function getTotalQuantityAttribute(): int
     {
-        return $this->hasMany(DemandRecord::class);
+        return $this->store_quantity + $this->warehouse_quantity;
+    }
+
+    public function orderingCosts()
+    {
+        return $this->hasMany(ProductOrderingCost::class);
+    }
+
+    public function latestOrderingCost()
+    {
+        return $this->hasOne(ProductOrderingCost::class)->latestOfMany();
     }
 }

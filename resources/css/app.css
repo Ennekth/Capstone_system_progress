@@ -9,6 +9,62 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
-.flex:has(#sidebarToggle:not(:checked)) #openSidebarBtn {
-    display: none;
+
+/* ===== Sidebar ===== */
+
+#sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    width: 16rem;
+    transform: translateX(-100%);
+}
+
+html.sidebar-open #sidebar {
+    transform: translateX(0);
+}
+
+html.sidebar-ready #sidebar {
+    transition: transform 0.3s ease;
+}
+
+#sidebarOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    pointer-events: none;
+}
+
+html.sidebar-open #sidebarOverlay {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+html.sidebar-ready #sidebarOverlay {
+    transition: opacity 0.3s ease;
+}
+
+@media (min-width: 1024px) {
+    #sidebar {
+        position: static;
+        transform: none;
+        width: 0;
+        overflow: hidden;
+    }
+
+    html.sidebar-open #sidebar {
+        width: 16rem;
+    }
+
+    html.sidebar-ready #sidebar {
+        transition: width 0.3s ease;
+    }
+
+    #sidebarOverlay {
+        display: none;
+    }
 }

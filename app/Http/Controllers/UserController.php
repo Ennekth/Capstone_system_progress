@@ -30,7 +30,7 @@ class UserController extends Controller
             'username'  => ['required', 'string', 'max:255', Rule::unique('users', 'username')],
             'email'     => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'password'  => ['required', 'confirmed', 'min:8'],
-            'role'      => ['required', 'in:admin,manager,staff'],
+            'role'      => ['required', 'in:admin,manager,staff,warehouse_staff'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
@@ -62,7 +62,7 @@ class UserController extends Controller
             'username'  => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($user->id)],
             'email'     => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password'  => ['nullable', 'confirmed', 'min:8'],
-            'role'      => ['required', 'in:admin,manager,staff'],
+            'role'      => ['required', 'in:admin,manager,staff,warehouse_staff'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
@@ -120,6 +120,9 @@ class UserController extends Controller
 
         if (Auth::attempt([$field => $data['loginname'], 'password' => $data['loginpassword']])) {
             $request->session()->regenerate();
+                if ($user->role === 'warehouse_staff') {
+                    return redirect()->route('inventory.view');
+                }
             return redirect()->route('home');
         }
 
