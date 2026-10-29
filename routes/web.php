@@ -13,6 +13,7 @@ use App\Http\Controllers\SalesRecordController;
 use App\Http\Controllers\EoqSettingController;
 use App\Http\Controllers\EoqCalibrationController;
 use App\Http\Controllers\RestockBatchController;
+use App\Http\Controllers\ThemeController;
 
 // ==================== GUEST ROUTES ====================
 Route::middleware('guest')->group(function () {
@@ -95,4 +96,5 @@ Route::middleware('role:admin')->group(function () {
         // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
+    Route::post('/theme', [ThemeController::class, 'update'])->name('theme.update');
 });

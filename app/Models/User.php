@@ -27,6 +27,7 @@ class User extends Authenticatable
         'suffix',
         'role',
         'is_active',
+        'theme',
     ];
 
     /**

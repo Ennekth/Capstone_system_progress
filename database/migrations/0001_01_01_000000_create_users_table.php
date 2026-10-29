@@ -27,8 +27,9 @@ return new class extends Migration
             // Role & status
             $table->enum('role', ['admin', 'manager', 'staff', 'warehouse_staff'])->default('staff');
             $table->boolean('is_active')->default(true);
+            $table->enum('theme', ['light', 'dark'])->default('light');
 
-            // Laravel defaults (kept)
+            // Laravel defaults
             $table->timestamp('email_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();

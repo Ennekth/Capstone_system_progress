@@ -71,15 +71,27 @@
             @push('scripts')
             <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
             <script>
-                new Chart(document.getElementById('salesChart'), {
+                function chartColors() {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    return {
+                        line: isDark ?  '#111827' : '#e2e8f0' ,
+                        fill: isDark ? 'rgba(226, 232, 240, 0.12)' : 'rgba(17, 24, 39, 0.08)',
+                        grid: isDark ? 'rgba(148, 163, 184, 0.15)' : 'rgba(0, 0, 0, 0.08)',
+                        text: isDark ? '#94a3b8' : '#6b7280',
+                    };
+                }
+
+                const colors = chartColors();
+
+                const salesChart = new Chart(document.getElementById('salesChart'), {
                     type: 'line',
                     data: {
                         labels: @json($salesChart['labels']),
                         datasets: [{
                             label: 'Sales (₱)',
                             data: @json($salesChart['totals']),
-                            borderColor: '#111827',
-                            backgroundColor: 'rgba(17, 24, 39, 0.08)',
+                            borderColor: colors.line,
+                            backgroundColor: colors.fill,
                             tension: 0.3,
                             fill: true,
                         }]
@@ -87,8 +99,23 @@
                     options: {
                         responsive: true,
                         plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true } }
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.text } },
+                            x: { grid: { color: colors.grid }, ticks: { color: colors.text } }
+                        }
                     }
+                });
+
+                // Re-color the chart instantly when the theme is toggled
+                window.addEventListener('themechange', function () {
+                    const c = chartColors();
+                    salesChart.data.datasets[0].borderColor = c.line;
+                    salesChart.data.datasets[0].backgroundColor = c.fill;
+                    salesChart.options.scales.y.grid.color = c.grid;
+                    salesChart.options.scales.x.grid.color = c.grid;
+                    salesChart.options.scales.y.ticks.color = c.text;
+                    salesChart.options.scales.x.ticks.color = c.text;
+                    salesChart.update();
                 });
             </script>
             @endpush

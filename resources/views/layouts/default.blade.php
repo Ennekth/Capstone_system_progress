@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="{{ auth()->check() && auth()->user()->theme === 'dark' ? 'dark' : '' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -88,6 +88,25 @@
             requestAnimationFrame(function () {
                 root.classList.add('sidebar-ready');
             });
+
+            const themeBtn = document.getElementById('themeToggle');
+                if (themeBtn) {
+                    themeBtn.addEventListener('click', function () {
+                        window.dispatchEvent(new Event('themechange')); 
+                        const isDark = document.documentElement.classList.toggle('dark');
+
+                        fetch("{{ route('theme.update') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ theme: isDark ? 'dark' : 'light' })
+                        }).catch(function () {});
+                    });
+                }
+
         });
     </script>
 
