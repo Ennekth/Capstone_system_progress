@@ -9,6 +9,12 @@
     <script>
         // Runs immediately, before the page paints — sets the correct
         // sidebar state with no animation, so there's nothing to "slide."
+        try {
+            if (localStorage.getItem('productView') === 'grid') {
+                document.documentElement.dataset.productView = 'grid';
+            }
+        } catch (e) {}
+
         (function () {
             var isDesktop = window.innerWidth >= 1024;
             if (isDesktop) {
@@ -37,6 +43,8 @@
                 </button>
 
                 <h2 class="text-base sm:text-lg font-semibold truncate">@yield('title', 'Dashboard')</h2>
+                <p class="text-base sm:text-lg font-semibold text-gray-700 ml-auto truncate">
+                    Hello, {{ auth()->user()->full_name }}</p>
             </header>
 
             <!-- Page content -->
@@ -107,6 +115,18 @@
                     });
                 }
 
+
+                    document.querySelectorAll('[data-set-view]').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            const mode = btn.dataset.setView;
+                            if (mode === 'grid') {
+                                document.documentElement.dataset.productView = 'grid';
+                            } else {
+                                delete document.documentElement.dataset.productView;
+                            }
+                            try { localStorage.setItem('productView', mode); } catch (e) {}
+                        });
+                    });
         });
     </script>
 

@@ -74,7 +74,7 @@
                 function chartColors() {
                     const isDark = document.documentElement.classList.contains('dark');
                     return {
-                        line: isDark ?  '#111827' : '#e2e8f0' ,
+                        line: isDark ? '#e2e8f0' : '#111827',
                         fill: isDark ? 'rgba(226, 232, 240, 0.12)' : 'rgba(17, 24, 39, 0.08)',
                         grid: isDark ? 'rgba(148, 163, 184, 0.15)' : 'rgba(0, 0, 0, 0.08)',
                         text: isDark ? '#94a3b8' : '#6b7280',
@@ -198,7 +198,7 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 font-medium text-gray-900">{{ $row['product']->product_name }}</td>
                             <td class="px-6 py-4 text-gray-600">{{ number_format($row['annual_demand']) }} / year</td>
-                            <td class="px-6 py-4 text-gray-900 font-semibold">{{ $row['eoq'] }} units</td>
+                            <td class="px-6 py-4 text-gray-600 font-semibold">{{ number_format($row['eoq'], 0) }} units</td>
                         </tr>
                     @empty
                         <tr><td colspan="3" class="px-6 py-10 text-center text-gray-400">

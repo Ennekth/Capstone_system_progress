@@ -4,11 +4,11 @@
     $linkIdle   = 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white';
 @endphp
 <!-- Sidebar -->
-<aside id="sidebar" class="bg-white text-gray-700 border-r border-gray-200 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-800 flex flex-col">
+<aside id="sidebar" class="bg-white text-gray-700 border-r border-gray-200 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-400 flex flex-col">
 
-    <div class="px-6 py-5 border-b border-gray-800 whitespace-nowrap flex items-center justify-between">
-        <img src="{{ asset('images/logo.svg') }}" alt="Company Logo" class="h-8 w-auto">
-        <h1 class="text-xl font-bold">Inventory System</h1>
+    <div class="px-6 py-5 border-b border-gray-400 whitespace-nowrap flex items-center justify-between h-18">
+        
+        <img src="{{ asset('images/text_logo.svg') }}" alt="Company Name" class="h-auto w-auto">
 
         <button type="button" data-sidebar-toggle class="p-1 rounded hover:bg-gray-800 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,8 +129,8 @@
 
 
     <div class="px-3 py-4 border-t border-gray-800 whitespace-nowrap">
-        <p class="px-3 pb-2 text-xs text-gray-400 truncate">
-            Hello, {{ auth()->user()->full_name }}
+        <p class="px-3 pb-2 text-sm text-gray-700 truncate">
+            Signed in as {{ auth()->user()->role }}
         </p>
 
             <button type="button" id="themeToggle"

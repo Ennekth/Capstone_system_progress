@@ -63,7 +63,6 @@ class InventoryController extends Controller
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // Role-based location restrictions
         if ($user->role === 'warehouse_staff' && $data['location'] !== 'warehouse') {
             abort(403, 'Warehouse staff can only manage warehouse stock.');
         }
@@ -72,28 +71,33 @@ class InventoryController extends Controller
             abort(403, 'Staff can only request store restocks.');
         }
 
-        // Staff requests require approval; everyone else is auto-approved
-        $requiresApproval = $user->role === 'staff';
+        // Keep the log label consistent with the chosen location
+        if (in_array($data['type'], ['restock_store', 'restock_warehouse'])) {
+            $data['type'] = $data['location'] === 'store' ? 'restock_store' : 'restock_warehouse';
+        }
 
-        DB::transaction(function () use ($product, $data, $user, $requiresApproval) {
-            $movement = StockMovement::create([
+        $requiresApproval = $user->role === 'staff';
+        $column = $data['location'] === 'store' ? 'store_quantity' : 'warehouse_quantity';
+
+        DB::transaction(function () use ($product, $data, $user, $requiresApproval, $column) {
+            $before = $product->$column;
+            $after = $requiresApproval ? $before : $before + $data['quantity'];
+
+            StockMovement::create([
                 'product_id' => $product->id,
                 'requested_by' => $user->id,
                 'approved_by' => $requiresApproval ? null : $user->id,
                 'type' => $data['type'],
                 'status' => $requiresApproval ? 'pending' : 'approved',
+                'quantity_before' => $before,
+                'quantity_after' => $after,
                 'quantity' => $data['quantity'],
                 'note' => $data['note'] ?? null,
                 'approved_at' => $requiresApproval ? null : now(),
             ]);
 
-            // Only apply the actual stock change if auto-approved
             if (!$requiresApproval) {
-                if ($data['location'] === 'store') {
-                    $product->increment('store_quantity', $data['quantity']);
-                } else {
-                    $product->increment('warehouse_quantity', $data['quantity']);
-                }
+                $product->increment($column, $data['quantity']);
             }
         });
 

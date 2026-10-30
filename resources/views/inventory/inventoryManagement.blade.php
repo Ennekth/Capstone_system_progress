@@ -18,13 +18,15 @@
     <div class="bg-white border border-gray-200 rounded-xl shadow-sm">
 
         <div class="px-6 py-5 border-b border-gray-200">
-
-            <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200">
-                <h1 class="text-xl font-bold">Restock and Move Products</h1>
-                <a href="{{ route('inventory.restockBatch') }}"
-                class="bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-green-700">
-                    + Restock Mode
-                </a>
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="text-xl font-bold">Inventory</h1>
+                <div class="flex items-center gap-3">
+                    @include('partials.viewToggle')
+                    <a href="{{ route('inventory.restockBatch') }}"
+                       class="bg-green-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-green-700">
+                        + Restock Mode
+                    </a>
+                </div>
             </div>
 
             <form method="GET" class="flex flex-col sm:flex-row flex-wrap gap-3">
@@ -64,7 +66,7 @@
                     Apply
                 </button>
 
-                @if (request()->anyFilled(['search', 'category_id', 'status']) || request('sort') !== 'product_name')
+                @if (request()->anyFilled(['search', 'category_id', 'status']) || request('sort', 'product_name') !== 'product_name')
                     <a href="{{ request()->url() }}" class="text-sm font-medium text-gray-600 hover:bg-gray-100 px-4 py-2 rounded-lg">
                         Clear
                     </a>
@@ -72,7 +74,8 @@
             </form>
         </div>
 
-        <div class="overflow-x-auto">
+        {{-- ================= LIST VIEW ================= --}}
+        <div class="view-list overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
                     <tr>
@@ -91,15 +94,7 @@
                             <td class="px-6 py-4 text-gray-600">{{ $product->category->name ?? '—' }}</td>
                             <td class="px-6 py-4 text-gray-600">{{ $product->store_quantity ?? 0 }}</td>
                             <td class="px-6 py-4 text-gray-600">{{ $product->warehouse_quantity ?? 0 }}</td>
-                            <td class="px-6 py-4">
-                                @if (($product->store_quantity ?? 0) === 0)
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600">Out of Stock</span>
-                                @elseif ($product->isLowStock())
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Low Stock</span>
-                                @else
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">In Stock</span>
-                                @endif
-                            </td>
+                            <td class="px-6 py-4">@include('partials.stockBadge', ['product' => $product])</td>
                             <td class="px-6 py-4 text-right" onclick="event.stopPropagation()">
                                 <button type="button" onclick="document.getElementById('restock-{{ $product->id }}').classList.toggle('hidden')"
                                         class="text-gray-600 hover:text-gray-900 font-medium text-sm">
@@ -114,76 +109,16 @@
                             </td>
                         </tr>
 
-                        <!-- Restock form row -->
                         <tr id="restock-{{ $product->id }}" class="hidden bg-gray-50">
                             <td colspan="6" class="px-6 py-4">
-                                <form action="{{ route('inventory.restock', $product) }}" method="POST" class="flex flex-wrap items-end gap-3">
-                                    @csrf
-                                    <input type="hidden" name="type"
-                                           value="{{ auth()->user()->role === 'warehouse_staff' ? 'restock_warehouse' : 'restock_store' }}">
-
-                                    @if (!in_array(auth()->user()->role, ['warehouse_staff', 'staff']))
-                                        <div>
-                                            <label class="block text-xs text-gray-600 mb-1">Location</label>
-                                            <select name="location" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                                <option value="store">Store</option>
-                                                <option value="warehouse">Warehouse</option>
-                                            </select>
-                                        </div>
-                                    @else
-                                        <input type="hidden" name="location"
-                                               value="{{ auth()->user()->role === 'warehouse_staff' ? 'warehouse' : 'store' }}">
-                                        <p class="text-xs text-gray-500">
-                                            Restocking: <strong>{{ auth()->user()->role === 'warehouse_staff' ? 'Warehouse' : 'Store' }}</strong>
-                                        </p>
-                                    @endif
-
-                                    <div>
-                                        <label class="block text-xs text-gray-600 mb-1">Quantity</label>
-                                        <input type="number" name="quantity" min="1" required
-                                               class="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    </div>
-
-                                    <div class="flex-1 min-w-[160px]">
-                                        <label class="block text-xs text-gray-600 mb-1">Note (optional)</label>
-                                        <input type="text" name="note" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    </div>
-
-                                    <button type="submit" class="bg-gray-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-800">
-                                        Submit
-                                    </button>
-                                </form>
-                                @if (auth()->user()->role === 'staff')
-                                    <p class="text-xs text-amber-600 mt-2">This request will need admin/manager approval before stock updates.</p>
-                                @endif
+                                @include('partials.restockForm', ['product' => $product])
                             </td>
                         </tr>
 
                         @if ($canTransfer)
                             <tr id="transfer-{{ $product->id }}" class="hidden bg-blue-50">
                                 <td colspan="6" class="px-6 py-4">
-                                    <form action="{{ route('inventory.transfer', $product) }}" method="POST" class="flex flex-wrap items-end gap-3">
-                                        @csrf
-                                        <div>
-                                            <label class="block text-xs text-gray-600 mb-1">Direction</label>
-                                            <select name="direction" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                                <option value="to_store">Warehouse → Store</option>
-                                                <option value="to_warehouse">Store → Warehouse</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs text-gray-600 mb-1">Quantity</label>
-                                            <input type="number" name="quantity" min="1" required
-                                                   class="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                        </div>
-                                        <div class="flex-1 min-w-[160px]">
-                                            <label class="block text-xs text-gray-600 mb-1">Note (optional)</label>
-                                            <input type="text" name="note" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                        </div>
-                                        <button type="submit" class="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700">
-                                            Transfer
-                                        </button>
-                                    </form>
+                                    @include('partials.transferForm', ['product' => $product])
                                 </td>
                             </tr>
                         @endif
@@ -192,6 +127,59 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- ================= GRID VIEW ================= --}}
+        <div class="view-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-6">
+            @forelse ($products as $product)
+                <div class="border border-gray-200 rounded-xl overflow-hidden bg-white flex flex-col">
+
+                    <div class="cursor-pointer" onclick="openProductDetail({{ $product->id }})">
+                        @if ($product->product_image)
+                            <img src="{{ asset('storage/' . $product->product_image) }}" alt="{{ $product->product_name }}"
+                                 class="w-full aspect-square object-cover" loading="lazy">
+                        @else
+                            <div class="w-full aspect-square bg-gray-100 flex items-center justify-center text-gray-300">
+                                <svg class="h-12 w-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                        @endif
+
+                        <div class="p-3">
+                            <p class="font-medium text-gray-900 text-sm line-clamp-2">{{ $product->product_name }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $product->category->name ?? '—' }}</p>
+                            <p class="text-xs text-gray-500 mt-2">
+                                Store {{ $product->store_quantity ?? 0 }} · Warehouse {{ $product->warehouse_quantity ?? 0 }}
+                            </p>
+                            <div class="mt-2">@include('partials.stockBadge', ['product' => $product])</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto px-3 pb-3">
+                        <div class="flex gap-3 text-sm font-medium">
+                            <button type="button" onclick="document.getElementById('card-restock-{{ $product->id }}').classList.toggle('hidden')"
+                                    class="text-gray-600 hover:text-gray-900">Restock</button>
+                            @if ($canTransfer)
+                                <button type="button" onclick="document.getElementById('card-transfer-{{ $product->id }}').classList.toggle('hidden')"
+                                        class="text-blue-600 hover:text-blue-800">Transfer</button>
+                            @endif
+                        </div>
+
+                        <div id="card-restock-{{ $product->id }}" class="hidden mt-3 pt-3 border-t border-gray-100">
+                            @include('partials.restockForm', ['product' => $product])
+                        </div>
+
+                        @if ($canTransfer)
+                            <div id="card-transfer-{{ $product->id }}" class="hidden mt-3 pt-3 border-t border-gray-100">
+                                @include('partials.transferForm', ['product' => $product])
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <p class="col-span-full text-center text-gray-400 py-10">No products found.</p>
+            @endforelse
         </div>
 
         <div class="px-6 py-4">{{ $products->links() }}</div>

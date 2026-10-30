@@ -92,7 +92,7 @@
                                 <td class="px-4 py-3 text-gray-600">₱{{ number_format($product->computed_ordering_cost, 2) }}</td>
                                 <td class="px-4 py-3 text-gray-600">₱{{ number_format($product->computed_holding_cost, 2) }}</td>
                                 <td class="px-4 py-3 font-semibold text-gray-900">
-                                    {{ $product->computed_eoq > 0 ? $product->computed_eoq . ' units' : '—' }}
+                                    {{ $product->computed_eoq > 0 ? number_format($product->computed_eoq, 0) . ' units' : '—' }}
                                 </td>
                             </tr>
                         @empty

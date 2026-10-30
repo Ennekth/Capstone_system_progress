@@ -3,9 +3,10 @@
 @section('title', 'Login')
 
 @section('content')
-    <div class="w-full max-w-sm bg-white border border-gray-200 rounded-xl shadow-sm p-8">
-
-        <h1 class="text-2xl font-bold text-center mb-1">Inventory System</h1>
+    <div class="w-full max-w-sm bg-sky-50 border border-gray-200 rounded-xl shadow-sm p-8">
+        <img src="{{ asset('images/logo.svg') }}" alt="logo" class="h-10 w-auto m-auto ">
+        <img src="{{ asset('images/text_logo.svg') }}" alt="Company Name" class="h-auto w-auto m-auto">
+        <h3 class="text-xl font-bold text-gray-600 text-center mb-2">Inventory System</h3>
         <p class="text-sm text-gray-500 text-center mb-6">Sign in to your account</p>
 
         @if ($errors->any())

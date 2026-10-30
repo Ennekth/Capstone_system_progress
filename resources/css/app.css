@@ -131,3 +131,20 @@ html.dark main .hover\:bg-gray-800:hover { background-color: #64748b; }
 /* Input focus ring */
 html.dark main .focus\:ring-gray-800:focus   { --tw-ring-color: var(--dm-muted); }
 html.dark main .focus\:border-gray-800:focus { border-color: var(--dm-muted); }
+
+/* ===== List / Grid view toggle (Inventory + Product Management) ===== */
+html[data-product-view="grid"] .view-list { display: none; }
+html:not([data-product-view="grid"]) .view-grid { display: none; }
+
+[data-set-view] { color: #6b7280; }
+html:not([data-product-view="grid"]) [data-set-view="list"],
+html[data-product-view="grid"] [data-set-view="grid"] {
+    background-color: #111827;
+    color: #ffffff;
+}
+html.dark [data-set-view] { color: #94a3b8; }
+html.dark:not([data-product-view="grid"]) [data-set-view="list"],
+html.dark[data-product-view="grid"] [data-set-view="grid"] {
+    background-color: #475569;
+    color: #ffffff;
+}
