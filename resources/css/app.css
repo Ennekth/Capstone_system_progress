@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+  --font-sans:
+    "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* ===== Sidebar ===== */
+
+#sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  width: 16rem;
+  transform: translateX(-100%);
+}
+#sidebar nav {
+  min-height: 0;
+}
+
+html.sidebar-open #sidebar {
+  transform: translateX(0);
+}
+
+html.sidebar-ready #sidebar {
+  transition: transform 0.3s ease;
+}
+
+#sidebarOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+}
+
+html.sidebar-open #sidebarOverlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+html.sidebar-ready #sidebarOverlay {
+  transition: opacity 0.3s ease;
+}
+
+@media (min-width: 1024px) {
+  #sidebar {
+    position: sticky;
+    top: 0;
+    align-self: flex-start; /* stops the flex row from stretching it to full page height */
+    height: 100vh;
+    height: 100dvh; /* more accurate on browsers that support it */
+    flex-shrink: 0;
+    transform: none;
+    width: 0;
+    overflow: hidden;
+  }
+
+  html.sidebar-open #sidebar {
+    width: 16rem;
+  }
+
+  html.sidebar-ready #sidebar {
+    transition: width 0.3s ease;
+  }
+
+  #sidebarOverlay {
+    display: none;
+  }
+}
+
+/* Enable the dark: variant, driven by the .dark class on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ===== Dark mode: main content + topbar matched to #10141D ===== */
+html.dark {
+  color-scheme: dark;
+  --dm-page: #10141d;
+  --dm-surface: #10141d;
+  --dm-subtle: #0b0e14;
+  --dm-hover: #1e2536;
+  --dm-border: #1e2536;
+  --dm-border-strong: #2c354d;
+  --dm-text: #f1f5f9;
+  --dm-text-2: #cbd5e1;
+  --dm-muted: #94a3b8;
+}
+
+html.dark body {
+  background-color: var(--dm-page);
+  color: var(--dm-text-2);
+}
+html.dark header {
+  background-color: var(--dm-surface);
+  border-color: var(--dm-border);
+}
+
+/* Surfaces */
+html.dark :is(main, header) .bg-white {
+  background-color: var(--dm-surface);
+}
+html.dark main .bg-gray-50 {
+  background-color: var(--dm-subtle);
+}
+html.dark main .hover\:bg-gray-50:hover {
+  background-color: var(--dm-hover);
+}
+html.dark :is(main, header) .bg-gray-100,
+html.dark :is(main, header) .hover\:bg-gray-100:hover {
+  background-color: var(--dm-border);
+}
+html.dark main .bg-gray-200 {
+  background-color: var(--dm-border-strong);
+}
+
+/* Highlighted rows (restock mode, transfer, reject forms) */
+html.dark main .bg-amber-50 {
+  background-color: rgb(245 158 11 / 0.15);
+}
+html.dark main .bg-blue-50 {
+  background-color: rgb(59 130 246 / 0.15);
+}
+html.dark main .bg-red-50 {
+  background-color: rgb(239 68 68 / 0.15);
+}
+
+/* Borders and dividers */
+html.dark main .border-gray-100,
+html.dark main .border-gray-200 {
+  border-color: var(--dm-border);
+}
+html.dark main .border-gray-300 {
+  border-color: var(--dm-border-strong);
+}
+html.dark main .divide-gray-100 > * {
+  border-color: var(--dm-border);
+}
+
+/* Text */
+html.dark main .text-gray-900 {
+  color: var(--dm-text);
+}
+html.dark main .text-gray-800,
+html.dark main .text-gray-700 {
+  color: var(--dm-text-2);
+}
+html.dark main .text-gray-600,
+html.dark main .text-gray-500 {
+  color: var(--dm-muted);
+}
+html.dark main .hover\:text-gray-900:hover {
+  color: #ffffff;
+}
+
+/* Primary buttons */
+html.dark main .bg-gray-900 {
+  background-color: var(--dm-border-strong);
+}
+html.dark main .hover\:bg-gray-800:hover {
+  background-color: #3b4763;
+}
+
+/* Input focus ring */
+html.dark main .focus\:ring-gray-800:focus {
+  --tw-ring-color: var(--dm-muted);
+}
+html.dark main .focus\:border-gray-800:focus {
+  border-color: var(--dm-muted);
+}
+
+/* ===== List / Grid view toggle (Inventory + Product Management) ===== */
+html[data-product-view="grid"] .view-list {
+  display: none;
+}
+html:not([data-product-view="grid"]) .view-grid {
+  display: none;
+}
+
+[data-set-view] {
+  color: #6b7280;
+}
+html:not([data-product-view="grid"]) [data-set-view="list"],
+html[data-product-view="grid"] [data-set-view="grid"] {
+  background-color: #111827;
+  color: #ffffff;
+}
+html.dark [data-set-view] {
+  color: #94a3b8;
+}
+html.dark:not([data-product-view="grid"]) [data-set-view="list"],
+html.dark[data-product-view="grid"] [data-set-view="grid"] {
+  background-color: #475569;
+  color: #ffffff;
+}
