@@ -111,21 +111,22 @@
         </a>
     </div>
 
-    <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl shadow-xs">
+    <!-- Main Container Card Styled to Match Summary Cards -->
+    <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-sm overflow-hidden">
 
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-5 border-b border-gray-200 dark:border-[#1e2536] gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-8 py-6 border-b-2 border-gray-200 dark:border-[#1e2536] gap-4">
             <div>
                 <h1 class="text-xl font-bold text-gray-900 dark:text-white">Sales Records</h1>
                 <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">All recorded sales — from POS and imported data</p>
             </div>
             <!-- Import Sales Button -->
             <button type="button" onclick="toggleImportSalesModal(true)"
-               class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-300 ease-in-out shadow-xs cursor-pointer self-start sm:self-auto">
+               class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer self-start sm:self-auto">
                 Import Sales
             </button>
         </div>
 
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-[#1e2536] bg-gray-50/50 dark:bg-[#161B26]/50">
+        <div class="px-8 py-6 border-b-2 border-gray-200 dark:border-[#1e2536] bg-gray-50/50 dark:bg-[#161B26]/50">
             <form method="GET" class="flex flex-col sm:flex-row sm:items-center gap-3">
                 <input type="hidden" name="source" value="{{ request('source') }}">
                 <div class="grid grid-cols-1 sm:flex sm:items-center gap-3 flex-1">
@@ -133,26 +134,26 @@
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <span class="text-xs font-semibold text-gray-500 dark:text-slate-400 whitespace-nowrap">FROM:</span>
                         <input type="date" name="date_from" value="{{ request('date_from') }}" onchange="this.form.submit()"
-                               class="w-full sm:w-auto rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
+                               class="w-full sm:w-auto rounded-xl bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3.5 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
                     </div>
 
                     <!-- TO Date Picker with inline label -->
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <span class="text-xs font-semibold text-gray-500 dark:text-slate-400 whitespace-nowrap">TO:</span>
                         <input type="date" name="date_to" value="{{ request('date_to') }}" onchange="this.form.submit()"
-                               class="w-full sm:w-auto rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
+                               class="w-full sm:w-auto rounded-xl bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3.5 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
                     </div>
 
                     <!-- Source Dropdown & Clear Filters Side-by-Side -->
                     <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <select name="source" onchange="this.form.submit()" class="w-full sm:w-auto rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
+                        <select name="source" onchange="this.form.submit()" class="w-full sm:w-auto rounded-xl bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3.5 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
                             <option value="">All Sources</option>
                             <option value="pos" {{ request('source') === 'pos' ? 'selected' : '' }}>POS</option>
                             <option value="imported" {{ request('source') === 'imported' ? 'selected' : '' }}>Imported</option>
                         </select>
 
                         @if (request()->anyFilled(['date_from', 'date_to', 'source']))
-                            <a href="{{ route('sales.records') }}" class="text-xs font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-[#1e2536] px-3 py-2 rounded-lg transition-colors whitespace-nowrap border border-gray-300 dark:border-[#1e2536] bg-white dark:bg-[#161B26]">
+                            <a href="{{ route('sales.records') }}" class="text-xs font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-[#1e2536] px-4 py-2.5 rounded-xl transition-colors whitespace-nowrap border border-gray-300 dark:border-[#1e2536] bg-white dark:bg-[#161B26]">
                                 Clear Filters
                             </a>
                         @endif
@@ -163,33 +164,33 @@
 
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
-                <thead class="bg-gray-50 dark:bg-[#161B26] text-gray-600 dark:text-slate-400 uppercase text-xs border-b border-gray-200 dark:border-[#1e2536]">
+                <thead class="bg-gray-50 dark:bg-[#161B26] text-gray-600 dark:text-slate-400 uppercase text-xs border-b-2 border-gray-200 dark:border-[#1e2536]">
                     <tr>
-                        <th class="px-6 py-3">Date</th>
-                        <th class="px-6 py-3">Transaction ID</th>
-                        <th class="px-6 py-3">Source</th>
-                        <th class="px-6 py-3">Total</th>
-                        <th class="px-6 py-3">Recorded By</th>
-                        <th class="px-6 py-3 text-right">Actions</th>
+                        <th class="px-8 py-4">Date</th>
+                        <th class="px-8 py-4">Transaction ID</th>
+                        <th class="px-8 py-4">Source</th>
+                        <th class="px-8 py-4">Total</th>
+                        <th class="px-8 py-4">Recorded By</th>
+                        <th class="px-8 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-[#1e2536]">
                     @forelse ($records as $record)
                         <tr class="hover:bg-gray-50 dark:hover:bg-[#1e2536]/40 transition-colors">
-                            <td class="px-6 py-4 text-gray-600 dark:text-slate-400">{{ $record->created_at->format('M d, Y') }}</td>
-                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ $record->transaction_id }}</td>
-                            <td class="px-6 py-4">
+                            <td class="px-8 py-4 text-gray-600 dark:text-slate-400">{{ $record->created_at->format('M d, Y') }}</td>
+                            <td class="px-8 py-4 font-medium text-gray-900 dark:text-white">{{ $record->transaction_id }}</td>
+                            <td class="px-8 py-4">
                                 @if ($record->transaction_type === 0)
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">POS</span>
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">POS</span>
                                 @else
-                                    <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900">Imported</span>
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900">Imported</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-gray-900 dark:text-slate-100 font-medium">₱{{ number_format($record->total_amount, 2) }}</td>
-                            <td class="px-6 py-4 text-gray-600 dark:text-slate-400">
+                            <td class="px-8 py-4 text-gray-900 dark:text-slate-100 font-medium">₱{{ number_format($record->total_amount, 2) }}</td>
+                            <td class="px-8 py-4 text-gray-600 dark:text-slate-400">
                                 {{ $record->user->firstname ?? 'N/A' }} {{ $record->user->lastname ?? '' }}
                             </td>
-                            <td class="px-6 py-4 text-right">
+                            <td class="px-8 py-4 text-right">
                                 <a href="{{ route('receipt', $record->id) }}" class="text-gray-600 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white font-medium text-sm transition-colors">
                                     View
                                 </a>
@@ -206,24 +207,68 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-6 py-10 text-center text-gray-400 dark:text-slate-500">No sales records found.</td></tr>
+                        <tr><td colspan="6" class="px-8 py-12 text-center text-gray-400 dark:text-slate-500">No sales records found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-[#1e2536] text-gray-600 dark:text-slate-400">{{ $records->links() }}</div>
+        <!-- Fully Clickable Responsive Pagination Footer -->
+        <div class="px-8 py-5 border-t-2 border-gray-200 dark:border-[#1e2536] flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-slate-400">
+            <div>
+                Showing <span class="font-semibold text-gray-900 dark:text-white">{{ $records->firstItem() ?? 0 }}</span> to <span class="font-semibold text-gray-900 dark:text-white">{{ $records->lastItem() ?? 0 }}</span> of <span class="font-semibold text-gray-900 dark:text-white">{{ $records->total() }}</span> results
+            </div>
+
+            @if ($records->hasPages())
+                <nav role="navigation" aria-label="Pagination Navigation" class="flex items-center gap-1.5">
+                    {{-- Previous Page Link --}}
+                    @if ($records->onFirstPage())
+                        <span class="px-3.5 py-2 text-xs font-semibold text-gray-300 dark:text-slate-600 bg-gray-50 dark:bg-[#161B26]/50 rounded-xl cursor-not-allowed">
+                            Previous
+                        </span>
+                    @else
+                        <a href="{{ $records->previousPageUrl() }}" class="px-3.5 py-2 text-xs font-semibold text-gray-700 dark:text-slate-200 bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] rounded-xl hover:bg-gray-100 dark:hover:bg-[#1e2536] transition-colors cursor-pointer">
+                            Previous
+                        </a>
+                    @endif
+
+                    {{-- Page Numbers --}}
+                    @foreach ($records->getUrlRange(max(1, $records->currentPage() - 2), min($records->lastPage(), $records->currentPage() + 2)) as $page => $url)
+                        @if ($page == $records->currentPage())
+                            <span class="px-3.5 py-2 text-xs font-bold text-white bg-slate-800 dark:bg-slate-200 dark:text-slate-900 rounded-xl shadow-xs">
+                                {{ $page }}
+                            </span>
+                        @else
+                            <a href="{{ $url }}" class="px-3.5 py-2 text-xs font-semibold text-gray-700 dark:text-slate-300 bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] rounded-xl hover:bg-gray-100 dark:hover:bg-[#1e2536] transition-colors cursor-pointer">
+                                {{ $page }}
+                            </a>
+                        @endif
+                    @endforeach
+
+                    {{-- Next Page Link --}}
+                    @if ($records->hasMorePages())
+                        <a href="{{ $records->nextPageUrl() }}" class="px-3.5 py-2 text-xs font-semibold text-gray-700 dark:text-slate-200 bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] rounded-xl hover:bg-gray-100 dark:hover:bg-[#1e2536] transition-colors cursor-pointer">
+                            Next
+                        </a>
+                    @else
+                        <span class="px-3.5 py-2 text-xs font-semibold text-gray-300 dark:text-slate-600 bg-gray-50 dark:bg-[#161B26]/50 rounded-xl cursor-not-allowed">
+                            Next
+                        </span>
+                    @endif
+                </nav>
+            @endif
+        </div>
 
     </div>
 
     <!-- Import Sales Modal Popup -->
     <div id="importSalesModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="relative w-full max-w-xl bg-white dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] rounded-2xl shadow-2xl p-6 sm:p-8 transform transition-all text-left">
+        <div class="relative w-full max-w-xl bg-white dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-2xl p-6 sm:p-8 transform transition-all text-left">
             
             <!-- Modal Header -->
             <div class="flex items-center justify-between pb-4 mb-2">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white">Import Sales Records</h3>
-                <button type="button" onclick="toggleImportSalesModal(false)" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#10141D] transition-colors cursor-pointer">
+                <button type="button" onclick="toggleImportSalesModal(false)" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-[#10141D] transition-colors cursor-pointer">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
@@ -234,7 +279,7 @@
                 @csrf
 
                 <!-- Required Columns Box -->
-                <div class="bg-gray-50 dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl p-4">
+                <div class="bg-gray-50 dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-4">
                     <p class="text-xs font-semibold text-gray-700 dark:text-slate-300 mb-3">Required CSV columns:</p>
                     <ul class="space-y-2 text-xs text-gray-600 dark:text-slate-400">
                         <li class="flex items-center gap-2">• <code class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-slate-800 text-gray-800 dark:text-slate-200 font-mono text-[11px]">product_name</code></li>
@@ -248,11 +293,11 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-700 dark:text-slate-300 mb-2">CSV File</label>
                     <input type="file" name="file" accept=".csv, .xlsx, .xls" required 
-                           class="w-full text-xs text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-gray-100 dark:file:bg-[#10141D] file:text-gray-700 dark:file:text-slate-200 hover:file:bg-gray-200 dark:hover:file:bg-[#1e2536]">
+                           class="w-full text-xs text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-gray-100 dark:file:bg-[#10141D] file:text-gray-700 dark:file:text-slate-200 hover:file:bg-gray-200 dark:hover:file:bg-[#1e2536]">
                 </div>
 
                 <!-- Auto-create products checkbox card -->
-                <div class="border border-gray-200 dark:border-[#1e2536] rounded-xl p-4 bg-white dark:bg-[#10141D]">
+                <div class="border border-gray-200 dark:border-[#1e2536] rounded-2xl p-4 bg-white dark:bg-[#10141D]">
                     <label class="flex items-start gap-3 cursor-pointer">
                         <input type="checkbox" name="auto_create_products" value="1" class="mt-0.5 rounded border-gray-300 text-gray-900 focus:ring-gray-900">
                         <div>
@@ -264,11 +309,11 @@
 
                 <!-- Modal Actions -->
                 <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-[#1e2536]">
-                    <button type="button" onclick="toggleImportSalesModal(false)" class="text-sm font-medium text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-[#10141D] px-4 py-2 rounded-lg transition-colors cursor-pointer">
+                    <button type="button" onclick="toggleImportSalesModal(false)" class="text-sm font-medium text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-[#10141D] px-4 py-2.5 rounded-xl transition-colors cursor-pointer">
                         Cancel
                     </button>
                     <!-- Upload & Import Button -->
-                    <button type="submit" class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
+                    <button type="submit" class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
                         Upload & Import
                     </button>
                 </div>
