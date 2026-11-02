@@ -19,66 +19,95 @@
         </div>
     @endif
 
-    <!-- Modern Summary Cards with Icons & Clickable Filters -->
-    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+    <!-- Massive Modern Summary Cards with Clean Icons & Real Dynamic Percentage Metrics -->
+    <div class="grid grid-cols-1 sm:grid-cols-5 gap-6 mb-8">
         <!-- Today Card -->
         <a href="{{ route('sales.records', ['date_from' => now()->toDateString(), 'date_to' => now()->toDateString(), 'source' => request('source')]) }}"
-           class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-6 shadow-xs hover:border-slate-400 dark:hover:border-slate-700 transition-all cursor-pointer group flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-3">
-                <p class="text-sm font-medium text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Today</p>
-                <div class="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+           class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl p-8 shadow-sm hover:border-slate-400 dark:hover:border-slate-500 transition-all cursor-pointer group flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 group-hover:text-gray-700 dark:group-hover:text-slate-300 transition-colors">Today's Sales</span>
+                <div class="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
             </div>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['today'], 2) }}</p>
+            <div>
+                <p class="font-black text-gray-900 dark:text-white tracking-tight mb-2" style="font-size: 2rem;">₱{{ number_format($summary['today'], 2) }}</p>
+                <div class="flex items-center gap-1.5 text-xs font-semibold {{ $summary['today_change'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                    <svg class="w-4 h-4 {{ $summary['today_change'] < 0 ? 'rotate-90' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    <span>{{ $summary['today_change'] >= 0 ? '+' : '' }}{{ $summary['today_change'] }}% <span class="text-gray-400 dark:text-slate-500 font-normal">vs yesterday</span></span>
+                </div>
+            </div>
         </a>
 
         <!-- This Week Card -->
         <a href="{{ route('sales.records', ['date_from' => now()->startOfWeek()->toDateString(), 'date_to' => now()->endOfWeek()->toDateString(), 'source' => request('source')]) }}"
-           class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-6 shadow-xs hover:border-slate-400 dark:hover:border-slate-700 transition-all cursor-pointer group flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-3">
-                <p class="text-sm font-medium text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">This Week</p>
-                <div class="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+           class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl p-8 shadow-sm hover:border-slate-400 dark:hover:border-slate-500 transition-all cursor-pointer group flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 group-hover:text-gray-700 dark:group-hover:text-slate-300 transition-colors">This Week's Sales</span>
+                <div class="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
             </div>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['week'], 2) }}</p>
+            <div>
+                <p class="font-black text-gray-900 dark:text-white tracking-tight mb-2" style="font-size: 2rem;">₱{{ number_format($summary['week'], 2) }}</p>
+                <div class="flex items-center gap-1.5 text-xs font-semibold {{ $summary['week_change'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                    <svg class="w-4 h-4 {{ $summary['week_change'] < 0 ? 'rotate-90' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    <span>{{ $summary['week_change'] >= 0 ? '+' : '' }}{{ $summary['week_change'] }}% <span class="text-gray-400 dark:text-slate-500 font-normal">vs last week</span></span>
+                </div>
+            </div>
         </a>
 
         <!-- This Month Card -->
         <a href="{{ route('sales.records', ['date_from' => now()->startOfMonth()->toDateString(), 'date_to' => now()->endOfMonth()->toDateString(), 'source' => request('source')]) }}"
-           class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-6 shadow-xs hover:border-slate-400 dark:hover:border-slate-700 transition-all cursor-pointer group flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-3">
-                <p class="text-sm font-medium text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">This Month</p>
-                <div class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+           class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl p-8 shadow-sm hover:border-slate-400 dark:hover:border-slate-500 transition-all cursor-pointer group flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 group-hover:text-gray-700 dark:group-hover:text-slate-300 transition-colors">This Month's Sales</span>
+                <div class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                 </div>
             </div>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['month'], 2) }}</p>
+            <div>
+                <p class="font-black text-gray-900 dark:text-white tracking-tight mb-2" style="font-size: 2rem;">₱{{ number_format($summary['month'], 2) }}</p>
+                <div class="flex items-center gap-1.5 text-xs font-semibold {{ $summary['month_change'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                    <svg class="w-4 h-4 {{ $summary['month_change'] < 0 ? 'rotate-90' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    <span>{{ $summary['month_change'] >= 0 ? '+' : '' }}{{ $summary['month_change'] }}% <span class="text-gray-400 dark:text-slate-500 font-normal">vs last month</span></span>
+                </div>
+            </div>
         </a>
 
         <!-- This Year Card -->
         <a href="{{ route('sales.records', ['date_from' => now()->startOfYear()->toDateString(), 'date_to' => now()->endOfYear()->toDateString(), 'source' => request('source')]) }}"
-           class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-6 shadow-xs hover:border-slate-400 dark:hover:border-slate-700 transition-all cursor-pointer group flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-3">
-                <p class="text-sm font-medium text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">This Year</p>
-                <div class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+           class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl p-8 shadow-sm hover:border-slate-400 dark:hover:border-slate-500 transition-all cursor-pointer group flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 group-hover:text-gray-700 dark:group-hover:text-slate-300 transition-colors">This Year's Sales</span>
+                <div class="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                 </div>
             </div>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['year'], 2) }}</p>
+            <div>
+                <p class="font-black text-gray-900 dark:text-white tracking-tight mb-2" style="font-size: 2rem;">₱{{ number_format($summary['year'], 2) }}</p>
+                <div class="flex items-center gap-1.5 text-xs font-semibold {{ $summary['year_change'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                    <svg class="w-4 h-4 {{ $summary['year_change'] < 0 ? 'rotate-90' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    <span>{{ $summary['year_change'] >= 0 ? '+' : '' }}{{ $summary['year_change'] }}% <span class="text-gray-400 dark:text-slate-500 font-normal">vs last year</span></span>
+                </div>
+            </div>
         </a>
 
         <!-- Overall Card -->
         <a href="{{ route('sales.records', ['source' => request('source')]) }}"
-           class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-6 col-span-2 sm:col-span-1 shadow-xs hover:border-slate-400 dark:hover:border-slate-700 transition-all cursor-pointer group flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-3">
-                <p class="text-sm font-medium text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Overall</p>
-                <div class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+           class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl p-8 col-span-1 sm:col-span-1 shadow-sm hover:border-slate-400 dark:hover:border-slate-500 transition-all cursor-pointer group flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 group-hover:text-gray-700 dark:group-hover:text-slate-300 transition-colors">Overall Sales</span>
+                <div class="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                 </div>
             </div>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['overall'], 2) }}</p>
+            <div>
+                <p class="font-black text-gray-900 dark:text-white tracking-tight mb-2" style="font-size: 2rem;">₱{{ number_format($summary['overall'], 2) }}</p>
+                <div class="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                    <span>All-time accumulated revenue</span>
+                </div>
+            </div>
         </a>
     </div>
 

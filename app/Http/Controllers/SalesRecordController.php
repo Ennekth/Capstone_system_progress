@@ -32,12 +32,41 @@ class SalesRecordController extends Controller
 
         $records = $query->orderBy('created_at', 'desc')->paginate(25)->withQueryString();
 
+        // Current period totals
+        $todayTotal = Transaction::whereDate('created_at', today())->sum('total_amount');
+        $weekTotal = Transaction::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->sum('total_amount');
+        $monthTotal = Transaction::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('total_amount');
+        $yearTotal = Transaction::whereYear('created_at', now()->year)->sum('total_amount');
+        $overallTotal = Transaction::sum('total_amount');
+
+        // Previous period totals for trend calculation
+        $yesterdayTotal = Transaction::whereDate('created_at', today()->subDay())->sum('total_amount');
+        $lastWeekTotal = Transaction::whereBetween('created_at', [now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek()])->sum('total_amount');
+        $lastMonthTotal = Transaction::whereMonth('created_at', now()->subMonth()->month)->whereYear('created_at', now()->subMonth()->year)->sum('total_amount');
+        $lastYearTotal = Transaction::whereYear('created_at', now()->subYear()->year)->sum('total_amount');
+
+        // Helper function for percentage change
+        $calcChange = function ($current, $previous) {
+            if ($previous == 0) {
+                return $current > 0 ? 100.0 : 0.0;
+            }
+            return round((($current - $previous) / $previous) * 100, 1);
+        };
+
         $summary = [
-            'today' => Transaction::whereDate('created_at', today())->sum('total_amount'),
-            'week' => Transaction::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->sum('total_amount'),
-            'month' => Transaction::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('total_amount'),
-            'year' => Transaction::whereYear('created_at', now()->year)->sum('total_amount'),
-            'overall' => Transaction::sum('total_amount'),
+            'today' => $todayTotal,
+            'today_change' => $calcChange($todayTotal, $yesterdayTotal),
+            
+            'week' => $weekTotal,
+            'week_change' => $calcChange($weekTotal, $lastWeekTotal),
+            
+            'month' => $monthTotal,
+            'month_change' => $calcChange($monthTotal, $lastMonthTotal),
+            
+            'year' => $yearTotal,
+            'year_change' => $calcChange($yearTotal, $lastYearTotal),
+            
+            'overall' => $overallTotal,
         ];
 
         return view('sales.salesRecords', compact('records', 'summary'));
