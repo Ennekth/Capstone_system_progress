@@ -19,63 +19,116 @@
         </div>
     @endif
 
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
-            <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl p-5">
-                <p class="text-sm text-gray-500 dark:text-slate-400">Today</p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['today'], 2) }}</p>
+    <!-- Modern Summary Cards with Icons & Clickable Filters -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
+        <!-- Today Card -->
+        <a href="{{ route('sales.records', ['date_from' => now()->toDateString(), 'date_to' => now()->toDateString(), 'source' => request('source')]) }}"
+           class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-6 shadow-xs hover:border-slate-400 dark:hover:border-slate-700 transition-all cursor-pointer group flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-medium text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Today</p>
+                <div class="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
             </div>
-            <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl p-5">
-                <p class="text-sm text-gray-500 dark:text-slate-400">This Week</p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['week'], 2) }}</p>
-            </div>
-            <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl p-5">
-                <p class="text-sm text-gray-500 dark:text-slate-400">This Month</p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['month'], 2) }}</p>
-            </div>
-            <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl p-5">
-                <p class="text-sm text-gray-500 dark:text-slate-400">This Year</p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['year'], 2) }}</p>
-            </div>
-            <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl p-5 col-span-2 sm:col-span-1">
-                <p class="text-sm text-gray-500 dark:text-slate-400">Overall</p>
-                <p class="text-xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['overall'], 2) }}</p>
-            </div>
-        </div>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['today'], 2) }}</p>
+        </a>
 
-    <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl shadow-sm">
+        <!-- This Week Card -->
+        <a href="{{ route('sales.records', ['date_from' => now()->startOfWeek()->toDateString(), 'date_to' => now()->endOfWeek()->toDateString(), 'source' => request('source')]) }}"
+           class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-6 shadow-xs hover:border-slate-400 dark:hover:border-slate-700 transition-all cursor-pointer group flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-medium text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">This Week</p>
+                <div class="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+            </div>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['week'], 2) }}</p>
+        </a>
 
-        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-[#1e2536]">
+        <!-- This Month Card -->
+        <a href="{{ route('sales.records', ['date_from' => now()->startOfMonth()->toDateString(), 'date_to' => now()->endOfMonth()->toDateString(), 'source' => request('source')]) }}"
+           class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-6 shadow-xs hover:border-slate-400 dark:hover:border-slate-700 transition-all cursor-pointer group flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-medium text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">This Month</p>
+                <div class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                </div>
+            </div>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['month'], 2) }}</p>
+        </a>
+
+        <!-- This Year Card -->
+        <a href="{{ route('sales.records', ['date_from' => now()->startOfYear()->toDateString(), 'date_to' => now()->endOfYear()->toDateString(), 'source' => request('source')]) }}"
+           class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-6 shadow-xs hover:border-slate-400 dark:hover:border-slate-700 transition-all cursor-pointer group flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-medium text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">This Year</p>
+                <div class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                </div>
+            </div>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['year'], 2) }}</p>
+        </a>
+
+        <!-- Overall Card -->
+        <a href="{{ route('sales.records', ['source' => request('source')]) }}"
+           class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-6 col-span-2 sm:col-span-1 shadow-xs hover:border-slate-400 dark:hover:border-slate-700 transition-all cursor-pointer group flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-medium text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Overall</p>
+                <div class="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                </div>
+            </div>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($summary['overall'], 2) }}</p>
+        </a>
+    </div>
+
+    <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl shadow-xs">
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between px-6 py-5 border-b border-gray-200 dark:border-[#1e2536] gap-4">
             <div>
                 <h1 class="text-xl font-bold text-gray-900 dark:text-white">Sales Records</h1>
                 <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">All recorded sales — from POS and imported data</p>
             </div>
-            <!-- Import Sales Button (Option B Style) -->
+            <!-- Import Sales Button -->
             <button type="button" onclick="toggleImportSalesModal(true)"
-               class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
+               class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-300 ease-in-out shadow-xs cursor-pointer self-start sm:self-auto">
                 Import Sales
             </button>
         </div>
 
         <div class="px-6 py-4 border-b border-gray-200 dark:border-[#1e2536] bg-gray-50/50 dark:bg-[#161B26]/50">
-            <form method="GET" class="flex flex-wrap gap-3">
-                <input type="date" name="date_from" value="{{ request('date_from') }}"
-                       class="rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
-                <input type="date" name="date_to" value="{{ request('date_to') }}"
-                       class="rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
-                <select name="source" class="rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
-                    <option value="">All Sources</option>
-                    <option value="pos" {{ request('source') === 'pos' ? 'selected' : '' }}>POS</option>
-                    <option value="imported" {{ request('source') === 'imported' ? 'selected' : '' }}>Imported</option>
-                </select>
-                <!-- Filter Button (Option B Style) -->
-                <button type="submit" class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
-                    Filter
-                </button>
-                @if (request()->anyFilled(['date_from', 'date_to', 'source']))
-                    <a href="{{ route('sales.records') }}" class="text-sm font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-[#1e2536] px-4 py-2 rounded-lg transition-colors">
-                        Clear
-                    </a>
-                @endif
+            <form method="GET" class="flex flex-col sm:flex-row sm:items-center gap-3">
+                <input type="hidden" name="source" value="{{ request('source') }}">
+                <div class="grid grid-cols-1 sm:flex sm:items-center gap-3 flex-1">
+                    <!-- FROM Date Picker with inline label -->
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <span class="text-xs font-semibold text-gray-500 dark:text-slate-400 whitespace-nowrap">FROM:</span>
+                        <input type="date" name="date_from" value="{{ request('date_from') }}" onchange="this.form.submit()"
+                               class="w-full sm:w-auto rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
+                    </div>
+
+                    <!-- TO Date Picker with inline label -->
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <span class="text-xs font-semibold text-gray-500 dark:text-slate-400 whitespace-nowrap">TO:</span>
+                        <input type="date" name="date_to" value="{{ request('date_to') }}" onchange="this.form.submit()"
+                               class="w-full sm:w-auto rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
+                    </div>
+
+                    <!-- Source Dropdown & Clear Filters Side-by-Side -->
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <select name="source" onchange="this.form.submit()" class="w-full sm:w-auto rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
+                            <option value="">All Sources</option>
+                            <option value="pos" {{ request('source') === 'pos' ? 'selected' : '' }}>POS</option>
+                            <option value="imported" {{ request('source') === 'imported' ? 'selected' : '' }}>Imported</option>
+                        </select>
+
+                        @if (request()->anyFilled(['date_from', 'date_to', 'source']))
+                            <a href="{{ route('sales.records') }}" class="text-xs font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-[#1e2536] px-3 py-2 rounded-lg transition-colors whitespace-nowrap border border-gray-300 dark:border-[#1e2536] bg-white dark:bg-[#161B26]">
+                                Clear Filters
+                            </a>
+                        @endif
+                    </div>
+                </div>
             </form>
         </div>
 
@@ -185,7 +238,7 @@
                     <button type="button" onclick="toggleImportSalesModal(false)" class="text-sm font-medium text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-[#10141D] px-4 py-2 rounded-lg transition-colors cursor-pointer">
                         Cancel
                     </button>
-                    <!-- Upload & Import Button (Option B Style) -->
+                    <!-- Upload & Import Button -->
                     <button type="submit" class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
                         Upload & Import
                     </button>
