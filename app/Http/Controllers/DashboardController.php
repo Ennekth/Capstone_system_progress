@@ -61,7 +61,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function managementMetrics(DemandForecastService $forecastService, EoqService $eoqService): array
+   private function managementMetrics(DemandForecastService $forecastService, EoqService $eoqService): array
     {
         $products = Product::whereHas('category', fn($q) => $q->where('type', 'product'))->get();
         
@@ -71,6 +71,7 @@ class DashboardController extends Controller
         return [
             'lowStockProducts' => Product::with('category')->where(function($q) {
                 $q->where('store_quantity', '<=', 0)
+                  ->orWhere('warehouse_quantity', '<=', 0)
                   ->orWhere(fn($sub) => $sub->whereColumn('store_quantity', '<=', 'reorder_point')->whereNotNull('reorder_point'));
             })->get(),
             'pendingApprovals' => StockMovement::where('status', 'pending')->count(),

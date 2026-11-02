@@ -57,7 +57,8 @@
     {{-- Admin + Manager only --}}
     @if (in_array(auth()->user()->role, ['admin', 'manager']))
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            <a href="{{ route('inventory.index', ['status' => 'restock']) }}"
+            {{-- Updated to route directly to Product Management with restock filter --}}
+            <a href="{{ route('admin.products.index', ['status' => 'restock']) }}"
                class="group bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-5 hover:border-red-500/40 dark:hover:border-rose-500/40 hover:shadow-lg transition-all duration-300 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-slate-500 mb-1">Restock Needed</p>
@@ -80,108 +81,107 @@
             </a>
         </div>
 
-            {{-- Sales Performance Card (Styled like reference design) --}}
-            <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl shadow-sm p-6 mb-6">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Total Sales</h2>
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl font-extrabold text-gray-900 dark:text-white">₱{{ number_format(array_sum($salesChart['totals']), 2) }}</span>
-                            <span class="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full {{ $salesGrowth >= 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-rose-400' }}">
-                                {{ $salesGrowth >= 0 ? '↑ +' . $salesGrowth . '%' : '↓ ' . $salesGrowth . '%' }} from last period
-                            </span>
-                        </div>
-                    </div>
-
-                    {{-- Right Header Controls (7D/14D/30D buttons + Projected Demand & EOQ badges) --}}
-                    <div class="flex flex-wrap items-center gap-3">
-                        <div class="hidden xl:flex items-center gap-3 bg-gray-50 dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] px-3 py-1.5 rounded-xl text-xs">
-                            <div>
-                                <span class="text-gray-400">Projected Demand:</span> <span class="font-bold text-gray-800 dark:text-white">{{ number_format($totalProjectedDemand) }}/yr</span>
-                            </div>
-                            <div class="h-3 w-px bg-gray-300 dark:bg-gray-700"></div>
-                            <div>
-                                <span class="text-gray-400">EOQ:</span> <span class="font-bold text-gray-800 dark:text-white">{{ number_format($totalEoq) }} units</span>
-                            </div>
-                        </div>
-
-                        <div class="inline-flex rounded-xl border border-gray-200 dark:border-[#1e2536] p-1 bg-gray-50 dark:bg-[#161B26]">
-                            <a href="{{ route('home', ['range' => 7]) }}" class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors {{ $selectedRange == 7 ? 'bg-white dark:bg-[#10141D] text-blue-600 dark:text-blue-400 shadow-xs' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white' }}">7D</a>
-                            <a href="{{ route('home', ['range' => 14]) }}" class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors {{ $selectedRange == 14 ? 'bg-white dark:bg-[#10141D] text-blue-600 dark:text-blue-400 shadow-xs' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white' }}">14D</a>
-                            <a href="{{ route('home', ['range' => 30]) }}" class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors {{ $selectedRange == 30 ? 'bg-white dark:bg-[#10141D] text-blue-600 dark:text-blue-400 shadow-xs' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white' }}">30D</a>
-                        </div>
+        {{-- Sales Performance Card --}}
+        <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl shadow-sm p-6 mb-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-1">Total Sales</h2>
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl font-extrabold text-gray-900 dark:text-white">₱{{ number_format(array_sum($salesChart['totals']), 2) }}</span>
+                        <span class="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full {{ $salesGrowth >= 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-rose-400' }}">
+                            {{ $salesGrowth >= 0 ? '↑ +' . $salesGrowth . '%' : '↓ ' . $salesGrowth . '%' }} from last period
+                        </span>
                     </div>
                 </div>
-                <canvas id="salesChart" height="85"></canvas>
+
+                {{-- Right Header Controls --}}
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="hidden xl:flex items-center gap-3 bg-gray-50 dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] px-3 py-1.5 rounded-xl text-xs">
+                        <div>
+                            <span class="text-gray-400">Projected Demand:</span> <span class="font-bold text-gray-800 dark:text-white">{{ number_format($totalProjectedDemand) }}/yr</span>
+                        </div>
+                        <div class="h-3 w-px bg-gray-300 dark:bg-gray-700"></div>
+                        <div>
+                            <span class="text-gray-400">EOQ:</span> <span class="font-bold text-gray-800 dark:text-white">{{ number_format($totalEoq) }} units</span>
+                        </div>
+                    </div>
+
+                    <div class="inline-flex rounded-xl border border-gray-200 dark:border-[#1e2536] p-1 bg-gray-50 dark:bg-[#161B26]">
+                        <a href="{{ route('home', ['range' => 7]) }}" class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors {{ $selectedRange == 7 ? 'bg-white dark:bg-[#10141D] text-blue-600 dark:text-blue-400 shadow-xs' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white' }}">7D</a>
+                        <a href="{{ route('home', ['range' => 14]) }}" class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors {{ $selectedRange == 14 ? 'bg-white dark:bg-[#10141D] text-blue-600 dark:text-blue-400 shadow-xs' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white' }}">14D</a>
+                        <a href="{{ route('home', ['range' => 30]) }}" class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors {{ $selectedRange == 30 ? 'bg-white dark:bg-[#10141D] text-blue-600 dark:text-blue-400 shadow-xs' : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white' }}">30D</a>
+                    </div>
+                </div>
             </div>
+            <canvas id="salesChart" height="85"></canvas>
+        </div>
 
-            @push('scripts')
-            <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-            <script>
-                function chartColors() {
-                    const isDark = document.documentElement.classList.contains('dark');
-                    return {
-                        line: isDark ? '#3b82f6' : '#2563eb',
-                        fill: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(37, 99, 235, 0.08)',
-                        grid: isDark ? 'rgba(148, 163, 184, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-                        text: isDark ? '#94a3b8' : '#6b7280',
-                    };
-                }
+        @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+        <script>
+            function chartColors() {
+                const isDark = document.documentElement.classList.contains('dark');
+                return {
+                    line: isDark ? '#3b82f6' : '#2563eb',
+                    fill: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(37, 99, 235, 0.08)',
+                    grid: isDark ? 'rgba(148, 163, 184, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+                    text: isDark ? '#94a3b8' : '#6b7280',
+                };
+            }
 
-                const colors = chartColors();
-                const ctx = document.getElementById('salesChart').getContext('2d');
+            const colors = chartColors();
+            const ctx = document.getElementById('salesChart').getContext('2d');
 
-                const salesChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: @json($salesChart['labels']),
-                        datasets: [{
-                            label: 'Sales (₱)',
-                            data: @json($salesChart['totals']),
-                            borderColor: colors.line,
-                            backgroundColor: colors.fill,
-                            borderWidth: 2.5,
-                            tension: 0.4,
-                            fill: true,
-                            pointBackgroundColor: colors.line,
-                            pointRadius: 3,
-                            pointHoverRadius: 6,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { 
-                                beginAtZero: true, 
-                                grid: { color: colors.grid, drawBorder: false }, 
-                                ticks: { color: colors.text, font: { size: 11 } } 
-                            },
-                            x: { 
-                                grid: { color: colors.grid, drawBorder: false }, 
-                                ticks: { color: colors.text, font: { size: 11 } } 
-                            }
+            const salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: @json($salesChart['labels']),
+                    datasets: [{
+                        label: 'Sales (₱)',
+                        data: @json($salesChart['totals']),
+                        borderColor: colors.line,
+                        backgroundColor: colors.fill,
+                        borderWidth: 2.5,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: colors.line,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: colors.grid, drawBorder: false }, 
+                            ticks: { color: colors.text, font: { size: 11 } } 
+                        },
+                        x: { 
+                            grid: { color: colors.grid, drawBorder: false }, 
+                            ticks: { color: colors.text, font: { size: 11 } } 
                         }
                     }
-                });
+                }
+            });
 
-                window.addEventListener('themechange', function () {
-                    const c = chartColors();
-                    salesChart.data.datasets[0].borderColor = c.line;
-                    salesChart.data.datasets[0].backgroundColor = c.fill;
-                    salesChart.data.datasets[0].pointBackgroundColor = c.line;
-                    salesChart.options.scales.y.grid.color = c.grid;
-                    salesChart.options.scales.x.grid.color = c.grid;
-                    salesChart.options.scales.y.ticks.color = c.text;
-                    salesChart.options.scales.x.ticks.color = c.text;
-                    salesChart.update();
-                });
-            </script>
-            @endpush
-
+            window.addEventListener('themechange', function () {
+                const c = chartColors();
+                salesChart.data.datasets[0].borderColor = c.line;
+                salesChart.data.datasets[0].backgroundColor = c.fill;
+                salesChart.data.datasets[0].pointBackgroundColor = c.line;
+                salesChart.options.scales.y.grid.color = c.grid;
+                salesChart.options.scales.x.grid.color = c.grid;
+                salesChart.options.scales.y.ticks.color = c.text;
+                salesChart.options.scales.x.ticks.color = c.text;
+                salesChart.update();
+            });
+        </script>
+        @endpush
     @endif
 
-    {{-- Demand Forecast — Admin, Manager, Staff --}}
+    {{-- Demand Forecast --}}
     <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl shadow-sm mb-6">
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#1e2536]">
             <div>
@@ -271,10 +271,9 @@
         </div>
     </div>
 
-    {{-- Admin + Manager: Inventory Alerts --}}
-    @if (in_array(auth()->user()->role, ['admin', 'manager']) && $lowStockProducts->count() > 0)
+    {{-- Admin + Manager: Inventory Alerts (Positioned Right Below EOQ) --}}
+    @if (in_array(auth()->user()->role, ['admin', 'manager']))
         <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl shadow-sm mb-6">
-            {{-- Card Header --}}
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#1e2536]">
                 <div>
                     <h2 class="font-bold text-gray-900 dark:text-white">Inventory Alerts</h2>
@@ -296,7 +295,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-[#1e2536]">
-                        @foreach ($lowStockProducts as $product)
+                        @forelse ($lowStockProducts as $product)
                             <tr class="hover:bg-gray-50 dark:hover:bg-[#1e2536]/40 transition-colors">
                                 <td class="px-6 py-4 font-medium text-gray-900 dark:text-white text-left truncate w-1/4">
                                     {{ $product->product_name }}
@@ -316,10 +315,16 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-right text-gray-600 dark:text-slate-400 w-1/4">
-                                    {{ $product->store_quantity }} left <span class="text-gray-400 font-normal hidden sm:inline">(ROP: {{ $product->reorder_point ?? 'N/A' }})</span>
+                                    {{ $product->store_quantity }} left <span class="text-gray-400 font-normal hidden sm:inline">(ROP: {{ $product->reorder_point ?? '0' }})</span>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-6 py-10 text-center text-gray-400 dark:text-slate-500">
+                                    No inventory alerts at this time. All products are well-stocked!
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
