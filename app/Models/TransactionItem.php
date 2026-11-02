@@ -16,11 +16,15 @@ class TransactionItem extends Model
         'selling_price',
         'quantity',
         'subtotal',
+        'item_discount_type',
+        'item_discount_value',
+        'item_discount_scope',
     ];
 
     protected $casts = [
         'selling_price' => 'decimal:2',
         'subtotal' => 'decimal:2',
+        'item_discount_value' => 'decimal:2', // Add this cast
     ];
 
     public function transaction()

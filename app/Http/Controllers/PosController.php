@@ -295,8 +295,6 @@ class PosController extends Controller
         ));
     }
 
-    // Inside app/Http/Controllers/PosController.php
-
     public function processCheckout(Request $request)
     {
         $cart = session()->get('cart', []);
@@ -382,10 +380,9 @@ class PosController extends Controller
                 $baseItemSubtotal = $item['selling_price'] * $item['quantity'];
                 $itemDiscountAmount = 0;
                 
-                // Explicitly pull discount properties from session cart item
                 $discType = $item['item_discount_type'] ?? 'none';
                 $discVal = (float)($item['item_discount_value'] ?? 0);
-                $discScope = $item['item_discount_scope'] ?? 'whole'; // Fallback check
+                $discScope = $item['item_discount_scope'] ?? 'whole';
 
                 if ($discType === 'percentage' && $discVal > 0) {
                     $itemDiscountAmount = $baseItemSubtotal * ($discVal / 100);
@@ -399,7 +396,6 @@ class PosController extends Controller
 
                 $subtotalItem = max(0, $baseItemSubtotal - $itemDiscountAmount);
 
-                // Explicitly save the discount values so phpMyAdmin never shows NULL/0 when active
                 TransactionItem::create([
                     'transaction_id' => $transaction->id,
                     'product_id' => $product->id,
