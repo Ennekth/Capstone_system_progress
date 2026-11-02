@@ -12,7 +12,8 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::orderBy('lastname')->get();
+        // Paginate users (4 items per page to match dashboard standards)
+        $users = User::orderBy('lastname')->paginate(15)->withQueryString();
         return view('admin.users.usersManagement', ['users' => $users]);
     }
 
