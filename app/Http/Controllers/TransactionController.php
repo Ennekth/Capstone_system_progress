@@ -27,4 +27,11 @@ class TransactionController extends Controller
 
         return view('pos.transactionHistory', compact('transactions'));
     }
+
+    public function showReceipt($id)
+    {
+        $transaction = Transaction::with(['transactionItems.product', 'user'])->findOrFail($id);
+
+        return view('pos.receipt', compact('transaction'));
+    }
 }

@@ -10,74 +10,141 @@
         </div>
     @endif
 
-    <div class="flex flex-col lg:flex-row gap-6">
+    <div class="flex flex-col xl:flex-row gap-6">
 
-        <!-- ORDER SUMMARY -->
-        <div class="flex-[2] bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl shadow-sm p-6 h-fit">
-            <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Order Summary</h2>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-gray-600 dark:text-slate-300">
-                    <thead class="bg-gray-50 dark:bg-[#161B26] text-xs uppercase text-gray-500 dark:text-slate-400">
-                        <tr>
-                            <th class="px-4 py-3 rounded-l-lg">Product</th>
-                            <th class="px-4 py-3">Price</th>
-                            <th class="px-4 py-3">Qty</th>
-                            <th class="px-4 py-3 rounded-r-lg text-right">Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-[#1e2536]">
-                        @foreach ($cart as $item)
-                            @php
-                                $subtotal = $item['subtotal'] ?? ($item['selling_price'] * $item['quantity']);
-                            @endphp
-                            <tr>
-                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ $item['product_name'] }}</td>
-                                <td class="px-4 py-3">₱{{ number_format($item['selling_price'], 2) }}</td>
-                                <td class="px-4 py-3">{{ $item['quantity'] }}</td>
-                                <td class="px-4 py-3 text-right font-medium text-gray-900 dark:text-slate-200">₱{{ number_format($subtotal, 2) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-[#1e2536]">
-                <span class="text-lg font-bold text-gray-900 dark:text-white">Total</span>
-                <span class="text-2xl font-bold text-gray-900 dark:text-white">₱{{ number_format($total, 2) }}</span>
-            </div>
-        </div>
-
-        <!-- PAYMENT -->
-        <div class="flex-1 bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl shadow-sm p-6 h-fit">
-            <h2 class="text-lg font-bold mb-4 text-gray-900 dark:text-white">Payment</h2>
-
-            <form id="checkoutForm" action="{{ route('checkout.process') ?? '#' }}" method="POST" class="space-y-4">
-                @csrf
-
-                <div>
-                    <label for="amount_paid" class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">
-                        Amount Paid
-                    </label>
-                    <input type="number" step="0.01" min="{{ $total }}" name="amount_paid" id="amount_paid" required
-                           placeholder="Must be at least ₱{{ number_format($total, 2) }}"
-                           class="w-full rounded-lg bg-white dark:bg-[#10141D] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500
-                                  focus:outline-none focus:ring-1 focus:ring-slate-400">
-                    <span class="text-[11px] text-gray-400 dark:text-slate-500 mt-1 block">
-                        Must be at least ₱{{ number_format($total, 2) }}
+        <!-- ORDER SUMMARY SECTION -->
+        <div class="flex-[2] bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl shadow-sm p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100 dark:border-[#1e2536]">
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Order Summary</h2>
+                    <span class="text-xs font-semibold text-gray-500 dark:text-slate-400">
+                        {{ array_sum(array_column($cart, 'quantity')) }} {{ array_sum(array_column($cart, 'quantity')) === 1 ? 'item' : 'items' }}
                     </span>
                 </div>
 
-                <div class="space-y-3 pt-2">
-                    <!-- Confirm Payment -->
+                <!-- Items Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase border-b border-gray-100 dark:border-[#1e2536]">
+                                <th class="pb-3">Product</th>
+                                <th class="pb-3 text-center">Price</th>
+                                <th class="pb-3 text-center">Qty</th>
+                                <th class="pb-3 text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-[#1e2536]">
+                            @foreach ($cart as $id => $item)
+                                <tr class="py-3">
+                                    <td class="py-3 font-medium text-gray-900 dark:text-white">
+                                        {{ $item['product_name'] }}
+                                        @if(($item['item_discount_type'] ?? 'none') !== 'none' && ($item['item_discount_amount'] ?? 0) > 0)
+                                            <div class="text-xs font-normal text-rose-600 dark:text-rose-400">
+                                                Item Disc: -₱{{ number_format($item['item_discount_amount'], 2) }} ({{ (($item['item_discount_scope'] ?? 'whole') === 'per_item') ? 'Per Piece' : 'Whole Row' }})
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 text-center text-gray-600 dark:text-slate-300">₱{{ number_format($item['selling_price'], 2) }}</td>
+                                    <td class="py-3 text-center text-gray-600 dark:text-slate-300">{{ $item['quantity'] }}</td>
+                                    <td class="py-3 text-right font-semibold text-gray-900 dark:text-slate-100">₱{{ number_format($item['subtotal'], 2) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Totals & Breakdown Box -->
+            <div class="pt-6 border-t border-gray-200 dark:border-[#1e2536] mt-6 space-y-2">
+                <div class="flex justify-between text-sm text-gray-600 dark:text-slate-400">
+                    <span>Subtotal</span>
+                    <span>₱{{ number_format($subtotal, 2) }}</span>
+                </div>
+
+                <div class="flex justify-between items-center text-sm text-gray-600 dark:text-slate-400">
+                    <span class="text-emerald-600 dark:text-emerald-400 font-medium text-xs">
+                        Discounts ({{ isset($cartDiscount) && $cartDiscount['type'] !== 'none' ? ucfirst(str_replace('_', ' ', $cartDiscount['type'])) : 'None' }})
+                    </span>
+                    <span class="text-rose-600 dark:text-rose-400 font-medium">-₱{{ number_format($totalAllDiscounts, 2) }}</span>
+                </div>
+
+                <!-- Comprehensive Discount Breakdown Box -->
+                @if(count($discountedItemsList) > 0 || (isset($cartDiscount) && $cartDiscount['type'] !== 'none'))
+                    <div class="bg-gray-50 dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] rounded-lg p-3 text-xs space-y-2 my-2">
+                        <div class="flex justify-between text-gray-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[10px] pb-1 border-b border-gray-200 dark:border-[#1e2536]">
+                            <span>Applied Discount Details</span>
+                            <span class="text-emerald-600 dark:text-emerald-400">
+                                Total Saved: ₱{{ number_format($totalAllDiscounts, 2) }}
+                            </span>
+                        </div>
+
+                        <!-- Line Item Discounts Stack -->
+                        @if(count($discountedItemsList) > 0)
+                            <div class="space-y-1">
+                                <p class="font-semibold text-gray-700 dark:text-slate-300 text-[11px]">Item Discounts:</p>
+                                @foreach($discountedItemsList as $discItem)
+                                    @php
+                                        $scopeLabel = (($discItem['item_discount_scope'] ?? 'whole') === 'per_item') ? 'Per Piece' : 'Whole Row';
+                                    @endphp
+                                    <div class="flex justify-between items-center text-gray-600 dark:text-slate-400 pl-2 text-[11px]">
+                                        <span class="truncate max-w-[240px]">• {{ $discItem['product_name'] }} <span class="text-[10px] text-gray-400">({{ $scopeLabel }})</span></span>
+                                        <span class="text-rose-600 dark:text-rose-400 font-medium">-₱{{ number_format($discItem['item_discount_amount'], 2) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <!-- Cart Discount -->
+                        @if(isset($cartDiscount) && $cartDiscount['type'] !== 'none')
+                            <div class="pt-1 border-t border-gray-200 dark:border-[#1e2536] space-y-0.5 text-[11px]">
+                                <div class="flex justify-between font-semibold text-gray-700 dark:text-slate-300">
+                                    <span>Cart Discount ({{ ucfirst(str_replace('_', ' ', $cartDiscount['type'])) }})</span>
+                                    <span class="text-rose-600 dark:text-rose-400">-₱{{ number_format($discountAmount ?? 0, 2) }}</span>
+                                </div>
+
+                                @if($cartDiscount['type'] === 'senior' || $cartDiscount['type'] === 'pwd')
+                                    <p class="text-gray-500 dark:text-slate-400 pl-2">• Rate: 20% off (Customer: {{ $cartDiscount['customer_name'] ?? 'N/A' }})</p>
+                                @elseif($cartDiscount['type'] === 'employee')
+                                    <p class="text-gray-500 dark:text-slate-400 pl-2">• Rate: {{ ($cartDiscount['mode'] ?? 'percentage') === 'percentage' ? $cartDiscount['value'] . '% off' : '₱' . number_format($cartDiscount['value'], 2) . ' off' }} (Staff: {{ $cartDiscount['employee_name'] ?? 'N/A' }})</p>
+                                @elseif($cartDiscount['type'] === 'voucher')
+                                    <p class="text-gray-500 dark:text-slate-400 pl-2">• Code: <span class="uppercase font-bold">{{ $cartDiscount['voucher_code'] ?? 'N/A' }}</span> ({{ ($cartDiscount['mode'] ?? 'percentage') === 'percentage' ? $cartDiscount['value'] . '% off' : '₱' . number_format($cartDiscount['value'], 2) . ' off' }})</p>
+                                @elseif($cartDiscount['type'] === 'percentage')
+                                    <p class="text-gray-500 dark:text-slate-400 pl-2">• Rate: {{ $cartDiscount['value'] }}% off cart</p>
+                                @elseif($cartDiscount['type'] === 'amount')
+                                    <p class="text-gray-500 dark:text-slate-400 pl-2">• Deduction: ₱{{ number_format($cartDiscount['value'], 2) }} off cart</p>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                <div class="flex justify-between items-center text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-100 dark:border-[#1e2536]">
+                    <span>Total</span>
+                    <span class="text-xl">₱{{ number_format($total, 2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAYMENT SECTION -->
+        <div class="flex-1 bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl shadow-sm p-6 flex flex-col justify-between h-fit">
+            <form action="{{ route('checkout.process') }}" method="POST" class="space-y-6">
+                @csrf
+                <div>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-100 dark:border-[#1e2536]">Payment</h2>
+                    
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-slate-300 mb-2">Amount Paid <span class="text-rose-500">*</span></label>
+                    <input type="number" step="0.01" min="{{ $total }}" name="amount_paid" value="{{ old('amount_paid', $total) }}" placeholder="Must be at least ₱{{ number_format($total, 2) }}" required
+                           class="w-full rounded-lg bg-gray-50 dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] px-3.5 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Must be at least ₱{{ number_format($total, 2) }}</p>
+                </div>
+
+                <div class="space-y-3 pt-4 border-t border-gray-200 dark:border-[#1e2536]">
                     <button type="submit"
-                            class="w-full bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-emerald-600/80 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white font-semibold py-3 rounded-xl transition-all duration-300 ease-in-out shadow-sm cursor-pointer">
+                            class="w-full text-center bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-emerald-600/80 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-sm cursor-pointer text-sm">
                         Confirm Payment
                     </button>
-
-                    <!-- Back to Cart -->
                     <a href="{{ route('pos') }}"
-                       class="block w-full text-center bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold py-2.5 rounded-xl transition-all duration-300 ease-in-out shadow-sm">
+                       class="block w-full text-center bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-sm text-sm">
                         Back to Cart
                     </a>
                 </div>
@@ -85,54 +152,4 @@
         </div>
 
     </div>
-
-    <!-- Receipt Modal Window Popup -->
-    <div id="receiptModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
-        <div id="receiptModalContent" class="relative w-full max-w-md transform transition-all text-left">
-            <!-- Dynamic Receipt Content Injected Here -->
-        </div>
-    </div>
-
 @endsection
-
-@push('scripts')
-<script>
-    document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const form = this;
-        const formData = new FormData(form);
-        const submitBtn = form.querySelector('button[type="submit"]');
-        
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Processing...';
-
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'text/html'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            // Create a temporary element to parse the returned HTML response
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Look for receipt container or extract content block
-            const receiptBody = doc.querySelector('.min-h-\\[70vh\\]') || doc.body;
-
-            document.getElementById('receiptModalContent').innerHTML = receiptBody.innerHTML;
-            document.getElementById('receiptModal').classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-        })
-        .catch(error => {
-            console.error('Error processing payment:', error);
-            // Fallback to normal submission if fetch fails
-            form.submit();
-        });
-    });
-</script>
-@endpush

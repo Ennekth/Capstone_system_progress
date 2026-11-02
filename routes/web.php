@@ -57,6 +57,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/forecast/eoq-calibration', [EoqCalibrationController::class, 'index'])->name('eoq.calibration');
         Route::post('/forecast/eoq-calibration/apply', [EoqCalibrationController::class, 'applyBatch'])->name('eoq.calibration.apply');
     });
+
     // Admin + Manager: Products & Categories
     Route::middleware('role:admin,manager')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('products', ProductController::class)->except(['show']);
@@ -64,22 +65,29 @@ Route::middleware('auth')->group(function () {
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     });
-    // Admin + Manager + Staff: POS
-    Route::middleware('role:admin,manager,staff')->group(function () {
 
-        // POS
+    // Admin + Manager + Staff: POS, Checkout, & Receipts
+    Route::middleware('role:admin,manager,staff')->group(function () {
+        // POS Cart & Operations
         Route::get('/pos', [PosController::class, 'index'])->name('pos');
         Route::post('/pos/add/{id}', [PosController::class, 'addToCart'])->name('pos.add');
         Route::post('/pos/remove/{id}', [PosController::class, 'removeFromCart'])->name('pos.remove');
+        Route::post('/pos/clear', [PosController::class, 'clearCart'])->name('pos.clear');
+        Route::post('/pos/discount', [PosController::class, 'applyDiscount'])->name('pos.discount');
+        Route::post('/pos/item-discount/{id}', [PosController::class, 'applyItemDiscount'])->name('pos.item-discount');
 
+        // Checkout & Payment Processing
         Route::get('/checkout', [PosController::class, 'checkout'])->name('checkout');
         Route::post('/checkout', [PosController::class, 'processCheckout'])->name('checkout.process');
-        Route::get('/receipt/{id}', [PosController::class, 'receipt'])->name('receipt');
 
+        // Receipt Page Route
+        Route::get('/receipt/{id}', [TransactionController::class, 'showReceipt'])->name('receipt');
+
+        // Transaction History
         Route::get('/transactions', [TransactionController::class, 'index'])->name('transaction.history');
     });
-  
-    // Warehouse staff + Staff: view inventory (read-only-ish, restock button only)
+ 
+    // Warehouse staff + Staff: view inventory & restock operations
     Route::middleware('role:admin,manager,warehouse_staff,staff')->group(function () {
         Route::get('/inventory/view', [InventoryController::class, 'index'])->name('inventory.view');
         Route::post('/inventory/{product}/restock', [InventoryController::class, 'restock'])->name('inventory.restock');
@@ -94,7 +102,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/inventory/restock-mode', [RestockBatchController::class, 'index'])->name('inventory.restockBatch');
         Route::post('/inventory/restock-mode', [RestockBatchController::class, 'store'])->name('inventory.restockBatch.store');
     });
-        // Dashboard
+
+    // Dashboard & Global Utilities
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::post('/logout', [UserController::class, 'logout'])->name('logout');
     Route::post('/theme', [ThemeController::class, 'update'])->name('theme.update');
