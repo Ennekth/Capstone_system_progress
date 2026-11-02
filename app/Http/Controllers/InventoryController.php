@@ -56,8 +56,9 @@ class InventoryController extends Controller
             $sort = 'product_name';
         }
 
+        // Standardized to 16 items per page
         $products = $query->orderBy($sort, $direction === 'desc' ? 'desc' : 'asc')
-            ->paginate(20)
+            ->paginate(16)
             ->withQueryString();
 
         $categories = Category::orderBy('name')->get();

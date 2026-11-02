@@ -37,6 +37,7 @@ class PosController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
+        // Standardized to 24 items per page for POS layout grid
         $items = $query->orderBy('product_name')->paginate(24)->withQueryString();
         $categories = Category::orderBy('name')->get();
 

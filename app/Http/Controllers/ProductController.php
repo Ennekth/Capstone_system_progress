@@ -41,7 +41,8 @@ class ProductController extends Controller
             $query->orderBy($sort, $direction === 'desc' ? 'desc' : 'asc');
         }
 
-        $products = $query->paginate(15)->withQueryString();
+        // Standardized to 13 items per page
+        $products = $query->paginate(13)->withQueryString();
         $categories = Category::all();
 
         return view('admin.products.productManagement', compact('products', 'categories'));

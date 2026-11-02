@@ -10,7 +10,7 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::orderBy('name')->paginate(8)->withQueryString();
         return view('admin.categories.categoryManagement', ['categories' => $categories]);
     }
 

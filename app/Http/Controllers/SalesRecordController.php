@@ -30,7 +30,7 @@ class SalesRecordController extends Controller
             $query->where('transaction_type', $request->source === 'imported' ? 1 : 0);
         }
 
-        $records = $query->orderBy('created_at', 'desc')->paginate(25)->withQueryString();
+        $records = $query->orderBy('created_at', 'desc')->paginate(12)->withQueryString();
 
         // Current period totals
         $todayTotal = Transaction::whereDate('created_at', today())->sum('total_amount');

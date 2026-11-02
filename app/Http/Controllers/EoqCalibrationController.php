@@ -35,9 +35,10 @@ class EoqCalibrationController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
+        // Standardized to 16 items per page
         $products = $query->whereHas('category', fn($q) => $q->where('type', 'product'))
             ->orderBy('product_name')
-            ->paginate(20)
+            ->paginate(16)
             ->withQueryString();
 
         $products->getCollection()->transform(function ($product) use ($forecastService, $eoqService) {
