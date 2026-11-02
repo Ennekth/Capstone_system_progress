@@ -229,21 +229,35 @@ class InventoryController extends Controller
 
     public function logs(Request $request)
     {
-        $query = StockMovement::with(['product', 'requester', 'approver'])
+        $query = StockMovement::with(['product.category', 'requester', 'approver'])
             ->where('status', '!=', 'pending');
 
-        if ($request->filled('product_id')) {
-            $query->where('product_id', $request->product_id);
+        if ($request->filled('category_id')) {
+            $query->whereHas('product', function($q) use ($request) {
+                $q->where('category_id', $request->category_id);
+            });
         }
 
         $movements = $query->orderBy('created_at', 'desc')->get();
 
-        // Group by batch_id (ungrouped/null batch entries each become their own group)
+        // Group by batch_id
         $grouped = $movements->groupBy(fn($m) => $m->batch_id ?? 'single-' . $m->id);
 
-        $products = Product::orderBy('product_name')->get();
+        // Paginate the grouped collection manually (4 batches per page)
+        $page = $request->get('page', 1);
+        $perPage = 4;
+        $paginatedGroups = new \Illuminate\Pagination\LengthAwarePaginator(
+            $grouped->forPage($page, $perPage)->values(),
+            $grouped->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
-        return view('inventory.stockLogs', compact('grouped', 'products'));
+        $categories = Category::orderBy('name')->get();
+        $grouped = $paginatedGroups;
+
+        return view('inventory.stockLogs', compact('grouped', 'categories'));
     }
 
     // ==================== Staff REQUESTS ====================
