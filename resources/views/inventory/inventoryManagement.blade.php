@@ -30,8 +30,8 @@
                 </div>
             </div>
 
-            <form method="GET" class="flex flex-col sm:flex-row flex-wrap gap-3 pt-4">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..."
+            <form id="filterForm" method="GET" class="flex flex-col sm:flex-row flex-wrap gap-3 pt-4">
+                <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="Search products..."
                        class="flex-1 min-w-[180px] rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500
                               focus:outline-none focus:ring-1 focus:ring-slate-400">
 
@@ -151,7 +151,7 @@
                         @endif
 
                         <div class="p-3">
-                            <p class="font-medium text-gray-900 dark:text-white text-sm line-clamp-2">{{ $product->product_name }}</p>
+                            <p class="font-medium text-gray-900 dark:text-white text-sm line-collapse-2">{{ $product->product_name }}</p>
                             <p class="text-xs text-gray-400 dark:text-slate-400 mt-0.5">{{ $product->category->name ?? '—' }}</p>
                             <p class="text-xs text-gray-500 dark:text-slate-400 mt-2">
                                 Store {{ $product->store_quantity ?? 0 }} · Warehouse {{ $product->warehouse_quantity ?? 0 }}
@@ -192,3 +192,34 @@
     @include('partials.productDetailModal')
 
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const filterForm = document.getElementById('filterForm');
+        let debounceTimer;
+
+        if (searchInput) {
+            const savedCursorPos = sessionStorage.getItem('inventorySearchCursorPos');
+            if (savedCursorPos !== null) {
+                searchInput.focus();
+                searchInput.setSelectionRange(parseInt(savedCursorPos), parseInt(savedCursorPos));
+                sessionStorage.removeItem('inventorySearchCursorPos');
+            } else if (searchInput.value.length > 0) {
+                searchInput.focus();
+                searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+            }
+
+            searchInput.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                sessionStorage.setItem('inventorySearchCursorPos', searchInput.selectionStart);
+
+                debounceTimer = setTimeout(function () {
+                    filterForm.submit();
+                }, 300);
+            });
+        }
+    });
+</script>
+@endpush

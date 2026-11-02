@@ -46,7 +46,7 @@
                     <option value="service" {{ old('type') === 'service' ? 'selected' : '' }}>Service</option>
                 </select>
 
-                <!-- Add Category Button (Option B Style) -->
+                <!-- Add Category Button -->
                 <button type="submit"
                         class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all duration-300 ease-in-out whitespace-nowrap shadow-xs cursor-pointer">
                     Add Category
@@ -56,8 +56,14 @@
 
         <!-- Category list -->
         <div class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-xl shadow-sm">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-[#1e2536]">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-[#1e2536] flex flex-col sm:flex-row items-center justify-between gap-3">
                 <h2 class="text-lg font-bold text-gray-900 dark:text-white">Existing Categories</h2>
+                
+                <!-- Live Search Input -->
+                <div class="w-full sm:w-64">
+                    <input type="text" id="searchInput" placeholder="Search categories..."
+                           class="w-full rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-1.5 text-xs text-gray-900 dark:text-slate-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-slate-400" autocomplete="off">
+                </div>
             </div>
 
             <div class="overflow-x-auto">
@@ -70,10 +76,10 @@
                             <th class="px-6 py-3 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-[#1e2536]">
+                    <tbody id="categoryTableBody" class="divide-y divide-gray-100 dark:divide-[#1e2536]">
                         @forelse ($categories as $category)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-[#1e2536]/40 transition-colors">
-                                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                            <tr class="category-row hover:bg-gray-50 dark:hover:bg-[#1e2536]/40 transition-colors">
+                                <td class="category-name px-6 py-4 font-medium text-gray-900 dark:text-white">
                                     {{ $category->name }}
                                 </td>
                                 <td class="px-6 py-4">
@@ -90,7 +96,6 @@
                                           onsubmit="return confirm('Delete this category?');" class="inline-block">
                                         @csrf
                                         @method('DELETE')
-                                        <!-- Delete Button (Destructive Rose Style) -->
                                         <button type="submit" 
                                                 class="bg-white border-2 border-rose-600 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-rose-600/80 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
                                             Delete
@@ -99,9 +104,9 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
+                            <tr id="noCategoriesRow">
                                 <td colspan="4" class="px-6 py-10 text-center text-gray-400 dark:text-slate-500">
-                                    No categories yet. Add one above.
+                                    No categories found.
                                 </td>
                             </tr>
                         @endforelse
@@ -112,3 +117,32 @@
 
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const rows = document.querySelectorAll('.category-row');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const query = searchInput.value.toLowerCase().trim();
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    const nameCell = row.querySelector('.category-name');
+                    if (nameCell) {
+                        const text = nameCell.textContent.toLowerCase();
+                        if (text.includes(query)) {
+                            row.style.display = '';
+                            visibleCount++;
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        }
+    });
+</script>
+@endpush

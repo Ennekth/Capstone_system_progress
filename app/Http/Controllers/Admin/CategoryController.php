@@ -8,31 +8,31 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $categories = Category::orderBy('name')->get();
         return view('admin.categories.categoryManagement', ['categories' => $categories]);
     }
 
     public function store(Request $request)
-{
-    $data = $request->validate([
-        'name' => ['required', 'string', 'max:255'],
-        'type' => ['required', 'in:product,service'],
-    ]);
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'in:product,service'],
+        ]);
 
-   $exists = Category::whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($data['name']))])
-    ->where('type', $data['type'])
-    ->exists();
+        $exists = Category::whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($data['name']))])
+            ->where('type', $data['type'])
+            ->exists();
 
-    if ($exists) {
-        return back()->withErrors(['name' => 'A category with this name already exists.'])->withInput();
+        if ($exists) {
+            return back()->withErrors(['name' => 'A category with this name already exists.'])->withInput();
+        }
+
+        Category::create($data);
+
+        return redirect()->route('admin.categories.index')->with('success', 'Category added.');
     }
-
-    Category::create($data);
-
-    return redirect()->route('admin.categories.index')->with('success', 'Category added.');
-}
 
     public function destroy(Category $category)
     {

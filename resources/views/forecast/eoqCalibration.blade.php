@@ -21,8 +21,8 @@
         </button>
     </div>
 
-    <form method="GET" class="flex flex-col sm:flex-row gap-3 mb-4">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..."
+    <form id="filterForm" method="GET" class="flex flex-col sm:flex-row gap-3 mb-4">
+        <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="Search products..."
                class="flex-1 rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-400">
         <select name="category_id" class="rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
             <option value="">All Categories</option>
@@ -32,7 +32,6 @@
                 </option>
             @endforeach
         </select>
-        <!-- Search Button (Option B Style) -->
         <button type="submit" class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all duration-300 ease-in-out whitespace-nowrap shadow-xs cursor-pointer">
             Search
         </button>
@@ -57,7 +56,6 @@
                            class="w-44 rounded-lg bg-white dark:bg-[#10141D] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-400"
                            placeholder="optional">
                 </div>
-                <!-- Apply to Selected Button (Option B Style) -->
                 <button type="submit"
                         onclick="return confirm('Apply this calibration to all selected products?');"
                         class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
@@ -112,7 +110,6 @@
     <div id="eoqSettingsModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="relative w-full max-w-xl bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl shadow-2xl p-6 sm:p-8 transform transition-all text-left">
             
-            <!-- Modal Header -->
             <div class="flex items-center justify-between pb-4 mb-4 border-b border-gray-200 dark:border-[#1e2536]">
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white">EOQ Settings</h3>
@@ -123,50 +120,41 @@
                 </button>
             </div>
 
-            <!-- Modal Form -->
             <form method="POST" action="{{ route('eoq.settings.update') ?? '#' }}" class="space-y-5 text-sm">
                 @csrf
                 
-                <!-- Ordering Cost Section -->
                 <div class="space-y-3">
                     <h4 class="font-semibold text-gray-900 dark:text-white text-xs uppercase tracking-wider">Ordering Cost</h4>
                     <div>
                         <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">Flat Default (₱ per order)</label>
                         <input type="number" step="0.01" name="flat_default" placeholder="Leave blank to use percentage instead"
                                class="w-full rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-400">
-                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">If set, this is used for every uncalibrated product regardless of its price. Most businesses use this, since ordering cost (paperwork, delivery) usually doesn't scale with item price.</p>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">Fallback: % of Purchase Cost</label>
                         <input type="number" step="0.01" name="fallback_percentage" value="10"
                                class="w-full rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
-                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Only used if the flat default above is left blank.</p>
                     </div>
                 </div>
 
-                <!-- Holding Cost Section -->
                 <div class="space-y-3 pt-3 border-t border-gray-200 dark:border-[#1e2536]">
                     <h4 class="font-semibold text-gray-900 dark:text-white text-xs uppercase tracking-wider">Holding Cost</h4>
                     <div>
                         <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">% of Purchase Cost / Year</label>
                         <input type="number" step="0.01" name="holding_percentage" value="20"
                                class="w-full rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
-                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Used for products without a storage space (cbm) set. 20-30% is a common industry range.</p>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-600 dark:text-slate-400 mb-1">₱ per Cubic Meter / Year</label>
                         <input type="number" step="0.01" name="holding_cbm" value="0"
                                class="w-full rounded-lg bg-white dark:bg-[#161B26] border border-gray-300 dark:border-[#1e2536] px-3 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-400">
-                        <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">Takes priority over the percentage when a product has storage space set.</p>
                     </div>
                 </div>
 
-                <!-- Modal Actions -->
                 <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-[#1e2536]">
                     <button type="button" onclick="closeEoqSettingsModal()" class="text-sm font-medium text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-[#161B26] px-4 py-2 rounded-lg transition-colors cursor-pointer">
                         Cancel
                     </button>
-                    <!-- Save Settings Button (Option B Style) -->
                     <button type="submit" class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
                         Save Settings
                     </button>
@@ -185,20 +173,25 @@
             selectedCount.textContent = checked + ' selected';
         }
 
-        selectAll.addEventListener('change', function () {
-            rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
-            updateCount();
-        });
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+                updateCount();
+            });
+        }
 
         rowCheckboxes.forEach(cb => cb.addEventListener('change', updateCount));
 
-        document.getElementById('batchForm').addEventListener('submit', function (e) {
-            const checked = document.querySelectorAll('.row-checkbox:checked').length;
-            if (checked === 0) {
-                e.preventDefault();
-                alert('Please select at least one product.');
-            }
-        });
+        const batchForm = document.getElementById('batchForm');
+        if (batchForm) {
+            batchForm.addEventListener('submit', function (e) {
+                const checked = document.querySelectorAll('.row-checkbox:checked').length;
+                if (checked === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one product.');
+                }
+            });
+        }
 
         function openEoqSettingsModal() {
             document.getElementById('eoqSettingsModal').classList.remove('hidden');
@@ -209,6 +202,33 @@
             document.getElementById('eoqSettingsModal').classList.add('hidden');
             document.body.classList.remove('overflow-hidden');
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('searchInput');
+            const filterForm = document.getElementById('filterForm');
+            let debounceTimer;
+
+            if (searchInput) {
+                const savedCursorPos = sessionStorage.getItem('eoqSearchCursorPos');
+                if (savedCursorPos !== null) {
+                    searchInput.focus();
+                    searchInput.setSelectionRange(parseInt(savedCursorPos), parseInt(savedCursorPos));
+                    sessionStorage.removeItem('eoqSearchCursorPos');
+                } else if (searchInput.value.length > 0) {
+                    searchInput.focus();
+                    searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+                }
+
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    sessionStorage.setItem('eoqSearchCursorPos', searchInput.selectionStart);
+
+                    debounceTimer = setTimeout(function () {
+                        filterForm.submit();
+                    }, 300);
+                });
+            }
+        });
     </script>
 
 @endsection

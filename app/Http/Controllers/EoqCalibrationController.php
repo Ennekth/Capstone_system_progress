@@ -21,7 +21,12 @@ class EoqCalibrationController extends Controller
             $searchTerms = array_filter(explode(' ', trim($request->search)));
             $query->where(function ($q) use ($searchTerms) {
                 foreach ($searchTerms as $term) {
-                    $q->where('product_name', 'like', '%' . $term . '%');
+                    $q->where(function ($subQuery) use ($term) {
+                        $subQuery->where('product_name', 'like', '%' . $term . '%')
+                                ->orWhereHas('category', function ($catQuery) use ($term) {
+                                    $catQuery->where('name', 'like', '%' . $term . '%');
+                                });
+                    });
                 }
             });
         }
@@ -35,7 +40,6 @@ class EoqCalibrationController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        // Attach live EOQ figures for display
         $products->getCollection()->transform(function ($product) use ($forecastService, $eoqService) {
             $annualDemand = $forecastService->projectedAnnualDemand($product);
             $product->computed_annual_demand = $annualDemand;
@@ -44,6 +48,11 @@ class EoqCalibrationController extends Controller
             $product->computed_eoq = $eoqService->calculate($product, $annualDemand);
             return $product;
         });
+
+        // If the request is sent via AJAX, return only the table results partial
+        if ($request->ajax()) {
+            return view('forecast.partials.eoqTable', compact('products'))->render();
+        }
 
         $categories = Category::where('type', 'product')->orderBy('name')->get();
 
