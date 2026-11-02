@@ -18,13 +18,18 @@ class ProductController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('product_name', 'like', "%{$search}%")
-                  ->orWhere('product_description', 'like', "%{$search}%");
+                ->orWhere('product_description', 'like', "%{$search}%");
             });
         }
 
         // Category filter
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
+        }
+
+        // Status filter from Dashboard card click
+        if ($request->get('status') === 'restock_needed') {
+            $query->whereRaw('(COALESCE(store_quantity, 0) + COALESCE(warehouse_quantity, 0)) <= COALESCE(reorder_point, 10)');
         }
 
         // Sorting

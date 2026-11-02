@@ -68,7 +68,11 @@ class DashboardController extends Controller
         $totalProjectedDemand = $products->sum(fn($p) => $forecastService->projectedAnnualDemand($p));
         $totalEoq = $products->sum(fn($p) => $eoqService->calculate($p, $forecastService->projectedAnnualDemand($p)));
 
+        // Calculate count of products where total quantity is at or below reorder point (Out of Stock or Low Stock)
+        $restockNeededCount = Product::whereRaw('(COALESCE(store_quantity, 0) + COALESCE(warehouse_quantity, 0)) <= COALESCE(reorder_point, 10)')->count();
+
         return [
+            'restockNeededCount' => $restockNeededCount,
             'lowStockProducts' => Product::with('category')->where(function($q) {
                 $q->where('store_quantity', '<=', 0)
                   ->orWhere('warehouse_quantity', '<=', 0)

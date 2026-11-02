@@ -57,12 +57,12 @@
     {{-- Admin + Manager only --}}
     @if (in_array(auth()->user()->role, ['admin', 'manager']))
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-            {{-- Updated to route directly to Product Management with restock filter --}}
-            <a href="{{ route('admin.products.index', ['status' => 'restock']) }}"
+            {{-- Updated to route directly to Product Management with restock_needed filter --}}
+            <a href="{{ route('admin.products.index', ['status' => 'restock_needed']) }}"
                class="group bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-2xl p-5 hover:border-red-500/40 dark:hover:border-rose-500/40 hover:shadow-lg transition-all duration-300 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-medium uppercase tracking-wider text-gray-400 dark:text-slate-500 mb-1">Restock Needed</p>
-                    <p class="text-2xl font-bold text-red-600 dark:text-rose-400">{{ $lowStockProducts->count() }}</p>
+                    <p class="text-2xl font-bold text-red-600 dark:text-rose-400">{{ $restockNeededCount ?? $lowStockProducts->count() }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
