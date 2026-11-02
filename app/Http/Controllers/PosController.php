@@ -23,7 +23,12 @@ class PosController extends Controller
             $searchTerms = array_filter(explode(' ', trim($request->search)));
             $query->where(function ($q) use ($searchTerms) {
                 foreach ($searchTerms as $term) {
-                    $q->where('product_name', 'like', '%' . $term . '%');
+                    $q->where(function ($subQuery) use ($term) {
+                        $subQuery->where('product_name', 'like', '%' . $term . '%')
+                                 ->orWhereHas('category', function ($catQuery) use ($term) {
+                                     $catQuery->where('name', 'like', '%' . $term . '%');
+                                 });
+                    });
                 }
             });
         }

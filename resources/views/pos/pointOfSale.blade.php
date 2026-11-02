@@ -28,7 +28,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </span>
-                    <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="Search items..." autocomplete="off"
+                    <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="Search items or categories..." autocomplete="off"
                            class="w-full rounded-lg bg-gray-50 dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] pl-9 pr-4 py-2 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-400">
                 </form>
 
@@ -868,16 +868,28 @@
         let debounceTimer;
 
         if (searchInput) {
-            if (searchInput.value.length > 0) {
+            // Restore cursor position from session storage if it was saved prior to submit
+            const savedCursorPos = sessionStorage.getItem('posSearchCursorPos');
+            if (savedCursorPos !== null) {
+                searchInput.focus();
+                searchInput.setSelectionRange(parseInt(savedCursorPos), parseInt(savedCursorPos));
+                sessionStorage.removeItem('posSearchCursorPos');
+            } else if (searchInput.value.length > 0) {
+                // Default fallback: focus at the end of text
                 searchInput.focus();
                 searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
             }
 
+            // Live Search with 300ms debounce
             searchInput.addEventListener('input', function () {
                 clearTimeout(debounceTimer);
+                
+                // Save current cursor position right before submitting
+                sessionStorage.setItem('posSearchCursorPos', searchInput.selectionStart);
+
                 debounceTimer = setTimeout(function () {
                     filterForm.submit();
-                }, 150);
+                }, 300);
             });
         }
     });
