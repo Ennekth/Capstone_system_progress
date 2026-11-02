@@ -169,12 +169,12 @@ class InventoryController extends Controller
 
     // ==================== APPROVALS (admin/manager only) ====================
 
-    public function pendingApprovals()
+   public function pendingApprovals()
     {
         $pending = StockMovement::with(['product', 'requester'])
             ->where('status', 'pending')
             ->orderBy('created_at', 'asc')
-            ->paginate(20);
+            ->paginate(4);
 
         return view('inventory.pendingApprovals', compact('pending'));
     }
