@@ -162,44 +162,44 @@
             </div>
 
             {{-- ================= GRID VIEW ================= --}}
-            <div class="view-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6 p-8 justify-items-center sm:justify-items-stretch">
+            <div class="view-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-6 justify-items-center sm:justify-items-stretch">
                 @forelse ($products as $product)
                     <div class="w-full border-2 border-gray-200 dark:border-[#1e2536] rounded-2xl overflow-hidden bg-white dark:bg-[#161B26] flex flex-col shadow-xs">
 
                         <div class="cursor-pointer" onclick="openProductDetail({{ $product->id }})">
                             @if (!empty($product->product_image))
-                                <div class="w-full h-48 overflow-hidden bg-gray-100 dark:bg-[#10141D]">
+                                <div class="w-full h-32 overflow-hidden bg-gray-100 dark:bg-[#10141D]">
                                     <img src="{{ asset('storage/' . $product->product_image) }}" alt="{{ $product->product_name }}"
                                          class="w-full h-full object-cover object-center" loading="lazy">
                                 </div>
                             @else
-                                <div class="w-full h-48 bg-gray-100 dark:bg-[#10141D] flex items-center justify-center text-gray-300 dark:text-slate-600">
-                                    <svg class="h-12 w-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div class="w-full h-32 bg-gray-100 dark:bg-[#10141D] flex items-center justify-center text-gray-300 dark:text-slate-600">
+                                    <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                 </div>
                             @endif
 
-                            <div class="p-4">
-                                <p class="font-bold text-gray-900 dark:text-white text-sm line-clamp-1">{{ $product->product_name }}</p>
-                                <p class="text-xs text-gray-400 dark:text-slate-400 mt-1">{{ $product->category->name ?? '—' }}</p>
-                                <p class="text-sm font-bold text-gray-900 dark:text-slate-100 mt-2">
+                            <div class="p-3">
+                                <p class="font-bold text-gray-900 dark:text-white text-xs line-clamp-1">{{ $product->product_name }}</p>
+                                <p class="text-[11px] text-gray-400 dark:text-slate-400 mt-0.5 truncate">{{ $product->category->name ?? '—' }}</p>
+                                <p class="text-xs font-bold text-gray-900 dark:text-slate-100 mt-1.5">
                                     ₱{{ $product->selling_price !== null ? number_format($product->selling_price, 2) : '—' }}
                                 </p>
-                                <p class="text-xs text-gray-500 dark:text-slate-400 mt-1 font-medium">
+                                <p class="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5 font-medium">
                                     Store {{ $product->store_quantity ?? 0 }} · WH {{ $product->warehouse_quantity ?? 0 }}
                                 </p>
                             </div>
                         </div>
 
                         <!-- Grid Card Action Buttons -->
-                        <div class="mt-auto p-4 pt-0 flex items-center justify-end gap-2" onclick="event.stopPropagation()">
+                        <div class="mt-auto p-3 pt-0 flex items-center gap-1.5" onclick="event.stopPropagation()">
                             <button type="button" onclick="toggleEditProductModal({{ $product->id }}, true)"
-                               class="flex-1 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-xs font-semibold px-3 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer text-center">
+                               class="flex-1 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-[10px] font-semibold px-2 py-1.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer text-center">
                                 Edit
                             </button>
                             <button type="button" onclick="toggleDeleteModal({{ $product->id }}, true)"
-                               class="flex-1 bg-white border-2 border-rose-600 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-rose-600/80 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white text-xs font-semibold px-3 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer text-center">
+                               class="flex-1 bg-white border-2 border-rose-600 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-rose-600/80 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white text-[10px] font-semibold px-2 py-1.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer text-center">
                                 Delete
                             </button>
                         </div>
