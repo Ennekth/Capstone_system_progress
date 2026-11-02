@@ -159,8 +159,10 @@
 
                         <div class="cursor-pointer" onclick="openProductDetail({{ $product->id }})">
                             @if (!empty($product->product_image))
-                                <img src="{{ asset('storage/' . $product->product_image) }}" alt="{{ $product->product_name }}"
-                                    class="w-full h-40 object-cover" loading="lazy">
+                                <div class="w-full h-40 overflow-hidden bg-gray-100 dark:bg-[#10141D]">
+                                    <img src="{{ asset('storage/' . $product->product_image) }}" alt="{{ $product->product_name }}"
+                                         class="w-full h-full object-cover object-center" loading="lazy">
+                                </div>
                             @else
                                 <div class="w-full h-40 bg-gray-100 dark:bg-[#10141D] flex items-center justify-center text-gray-300 dark:text-slate-600">
                                     <svg class="h-10 w-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">

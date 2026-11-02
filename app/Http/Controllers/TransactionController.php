@@ -11,16 +11,40 @@ class TransactionController extends Controller
     {
         $query = Transaction::with('user');
 
+        // Filter by Date Range (From)
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
 
+        // Filter by Date Range (To)
         if ($request->filled('date_to')) {
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
+        // Filter by Search Query
         if ($request->filled('search')) {
-            $query->where('transaction_id', 'like', '%' . $request->search . '%');
+            $searchTerm = trim($request->search);
+            
+            $query->where(function($q) use ($searchTerm) {
+                // 1. Search by Transaction ID or Cashier Name/Full Name
+                $q->where('transaction_id', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('user', function($userQuery) use ($searchTerm) {
+                      $userQuery->where('firstname', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('lastname', 'like', '%' . $searchTerm . '%')
+                                ->orWhereRaw("CONCAT(firstname, ' ', lastname) like ?", ['%' . $searchTerm . '%']);
+                  });
+
+                // 2. Safely check if the search term can be interpreted as a valid date
+                if (strlen($searchTerm) >= 6) {
+                    $timestamp = strtotime($searchTerm);
+                    if ($timestamp !== false) {
+                        $formattedDate = date('Y-m-d', $timestamp);
+                        if ($formattedDate && $formattedDate !== '1970-01-01') {
+                            $q->orWhereDate('created_at', $formattedDate);
+                        }
+                    }
+                }
+            });
         }
 
         $transactions = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
