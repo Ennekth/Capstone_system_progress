@@ -90,6 +90,8 @@ class RestockBatchController extends Controller
                     'quantity' => $qty,
                     'note' => $data['note'] ?? null,
                     'approved_at' => $requiresApproval ? null : now(),
+                    'created_at' => now(), // Explicitly captures current date and time
+                    'updated_at' => now(), // Explicitly captures current date and time
                 ]);
 
                 if (!$requiresApproval) {

@@ -43,12 +43,54 @@ class Product extends Model
             return false;
         }
 
-        return $this->store_quantity <= $this->reorder_point;
+        return $this->total_quantity <= $this->reorder_point;
     }
 
     public function getTotalQuantityAttribute(): int
     {
         return $this->store_quantity + $this->warehouse_quantity;
+    }
+
+    public function getStoreStatusAttribute(): string
+    {
+        if ($this->store_quantity <= 0) {
+            return 'Out of Stock';
+        }
+        
+        $threshold = $this->reorder_point ?? 10; // Default threshold if reorder point is not set
+        if ($this->store_quantity <= $threshold) {
+            return 'Low Stock';
+        }
+        
+        return 'In Stock';
+    }
+
+    public function getWarehouseStatusAttribute(): string
+    {
+        if ($this->warehouse_quantity <= 0) {
+            return 'Out of Stock';
+        }
+        
+        $threshold = $this->reorder_point ?? 10;
+        if ($this->warehouse_quantity <= $threshold) {
+            return 'Low Stock';
+        }
+        
+        return 'In Stock';
+    }
+
+    public function getTotalStatusAttribute(): string
+    {
+        if ($this->total_quantity <= 0) {
+            return 'Out of Stock';
+        }
+        
+        $threshold = $this->reorder_point ?? 10;
+        if ($this->total_quantity <= $threshold) {
+            return 'Low Stock';
+        }
+        
+        return 'In Stock';
     }
 
     public function orderingCosts()

@@ -32,7 +32,15 @@ class InventoryController extends Controller
             if ($request->status === 'low') {
                 $query->whereColumn('store_quantity', '<=', 'reorder_point')->whereNotNull('reorder_point');
             } elseif ($request->status === 'out') {
-                $query->where('store_quantity', 0);
+                $query->where('store_quantity', '<=', 0);
+            } elseif ($request->status === 'restock') {
+                $query->where(function ($q) {
+                    $q->where('store_quantity', '<=', 0)
+                      ->orWhere(function ($sub) {
+                          $sub->whereColumn('store_quantity', '<=', 'reorder_point')
+                              ->whereNotNull('reorder_point');
+                      });
+                });
             }
         }
 
@@ -166,31 +174,31 @@ class InventoryController extends Controller
         return view('inventory.pendingApprovals', compact('pending'));
     }
 
-public function approve(StockMovement $movement)
-{
-    if ($movement->status !== 'pending') {
-        return back()->with('error', 'This request has already been processed.');
+    public function approve(StockMovement $movement)
+    {
+        if ($movement->status !== 'pending') {
+            return back()->with('error', 'This request has already been processed.');
+        }
+
+        DB::transaction(function () use ($movement) {
+            $product = $movement->product;
+            $column = str_contains($movement->type, 'warehouse') ? 'warehouse_quantity' : 'store_quantity';
+
+            $before = $product->$column;
+            $product->increment($column, $movement->quantity);
+            $after = $before + $movement->quantity;
+
+            $movement->update([
+                'status' => 'approved',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'quantity_before' => $before,
+                'quantity_after' => $after,
+            ]);
+        });
+
+        return back()->with('success', 'Restock approved and applied.');
     }
-
-    DB::transaction(function () use ($movement) {
-        $product = $movement->product;
-        $column = str_contains($movement->type, 'warehouse') ? 'warehouse_quantity' : 'store_quantity';
-
-        $before = $product->$column;
-        $product->increment($column, $movement->quantity);
-        $after = $before + $movement->quantity;
-
-        $movement->update([
-            'status' => 'approved',
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-            'quantity_before' => $before,
-            'quantity_after' => $after,
-        ]);
-    });
-
-    return back()->with('success', 'Restock approved and applied.');
-}
 
     public function reject(Request $request, StockMovement $movement)
     {
@@ -214,27 +222,27 @@ public function approve(StockMovement $movement)
 
     // ==================== LOGS ====================
 
-public function logs(Request $request)
-{
-    $query = StockMovement::with(['product', 'requester', 'approver'])
-        ->where('status', '!=', 'pending');
+    public function logs(Request $request)
+    {
+        $query = StockMovement::with(['product', 'requester', 'approver'])
+            ->where('status', '!=', 'pending');
 
-    if ($request->filled('product_id')) {
-        $query->where('product_id', $request->product_id);
+        if ($request->filled('product_id')) {
+            $query->where('product_id', $request->product_id);
+        }
+
+        $movements = $query->orderBy('created_at', 'desc')->get();
+
+        // Group by batch_id (ungrouped/null batch entries each become their own group)
+        $grouped = $movements->groupBy(fn($m) => $m->batch_id ?? 'single-' . $m->id);
+
+        $products = Product::orderBy('product_name')->get();
+
+        return view('inventory.stockLogs', compact('grouped', 'products'));
     }
 
-    $movements = $query->orderBy('created_at', 'desc')->get();
-
-    // Group by batch_id (ungrouped/null batch entries each become their own group)
-    $grouped = $movements->groupBy(fn($m) => $m->batch_id ?? 'single-' . $m->id);
-
-    $products = Product::orderBy('product_name')->get();
-
-    return view('inventory.stockLogs', compact('grouped', 'products'));
-}
-
     // ==================== Staff REQUESTS ====================
-        public function myRequests(Request $request)
+    public function myRequests(Request $request)
     {
         $query = StockMovement::with(['product', 'approver'])
             ->where('requested_by', Auth::id());
@@ -314,5 +322,4 @@ public function logs(Request $request)
             'image' => $product->product_image ? asset('storage/' . $product->product_image) : null,
         ]);
     }
-
 }

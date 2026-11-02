@@ -28,12 +28,13 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
     });
 
-Route::middleware('role:admin')->group(function () {
-    Route::get('/forecast/settings', [ForecastSettingController::class, 'index'])->name('forecast.settings');
-    Route::post('/forecast/settings/global', [ForecastSettingController::class, 'updateGlobal'])->name('forecast.settings.global');
-    Route::post('/forecast/settings', [ForecastSettingController::class, 'storeOverride'])->name('forecast.settings.store');
-    Route::delete('/forecast/settings/{forecastSetting}', [ForecastSettingController::class, 'destroyOverride'])->name('forecast.settings.destroy');
-});
+    // Admin + Manager: Forecast Settings
+    Route::middleware('role:admin,manager')->group(function () {
+        Route::get('/forecast/settings', [ForecastSettingController::class, 'index'])->name('forecast.settings');
+        Route::post('/forecast/settings/global', [ForecastSettingController::class, 'updateGlobal'])->name('forecast.settings.global');
+        Route::post('/forecast/settings', [ForecastSettingController::class, 'storeOverride'])->name('forecast.settings.store');
+        Route::delete('/forecast/settings/{forecastSetting}', [ForecastSettingController::class, 'destroyOverride'])->name('forecast.settings.destroy');
+    });
 
     // Admin + Manager: full inventory, approvals, logs
     Route::middleware('role:admin,manager')->group(function () {
