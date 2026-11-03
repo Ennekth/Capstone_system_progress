@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\AuditsChanges;
 
 class EoqSetting extends Model
 {
+    use AuditsChanges;
+
     protected $fillable = [
         'default_ordering_cost',
         'holding_cost_percentage',

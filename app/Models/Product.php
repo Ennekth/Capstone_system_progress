@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\AuditsChanges;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, AuditsChanges;
 
     protected $fillable = [
         'product_name',
@@ -57,7 +58,7 @@ class Product extends Model
             return 'Out of Stock';
         }
         
-        $threshold = $this->reorder_point ?? 10; // Default threshold if reorder point is not set
+        $threshold = $this->reorder_point ?? 10;
         if ($this->store_quantity <= $threshold) {
             return 'Low Stock';
         }

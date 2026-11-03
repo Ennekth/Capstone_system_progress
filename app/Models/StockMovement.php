@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\AuditsChanges;
 
 class StockMovement extends Model
 {
-    use HasFactory;
+    use HasFactory, AuditsChanges;
 
     protected $fillable = [
         'batch_id',

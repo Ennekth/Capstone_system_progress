@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\AuditsChanges;
 
 class Category extends Model
 {
+    use AuditsChanges;
+
     protected $fillable = ['name', 'type'];
 
     public function products()

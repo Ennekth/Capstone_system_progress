@@ -15,6 +15,7 @@ use App\Http\Controllers\EoqCalibrationController;
 use App\Http\Controllers\RestockBatchController;
 use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\UserGuideController;
+use App\Http\Controllers\AuditLogController;
 
 // ==================== GUEST ROUTES ====================
 Route::middleware('guest')->group(function () {
@@ -29,12 +30,14 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
     });
 
-    // Admin + Manager: Forecast Settings
+    // Admin + Manager: Forecast Settings & Audit Logs
     Route::middleware('role:admin,manager')->group(function () {
         Route::get('/forecast/settings', [ForecastSettingController::class, 'index'])->name('forecast.settings');
         Route::post('/forecast/settings/global', [ForecastSettingController::class, 'updateGlobal'])->name('forecast.settings.global');
         Route::post('/forecast/settings', [ForecastSettingController::class, 'storeOverride'])->name('forecast.settings.store');
         Route::delete('/forecast/settings/{forecastSetting}', [ForecastSettingController::class, 'destroyOverride'])->name('forecast.settings.destroy');
+
+        Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     });
 
     // Admin + Manager: full inventory, approvals, logs
@@ -69,7 +72,6 @@ Route::middleware('auth')->group(function () {
 
     // Admin + Manager + Staff: POS, Checkout, & Receipts
     Route::middleware('role:admin,manager,staff')->group(function () {
-        // POS Cart & Operations
         Route::get('/pos', [PosController::class, 'index'])->name('pos');
         Route::post('/pos/add/{id}', [PosController::class, 'addToCart'])->name('pos.add');
         Route::post('/pos/remove/{id}', [PosController::class, 'removeFromCart'])->name('pos.remove');
@@ -77,14 +79,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/pos/discount', [PosController::class, 'applyDiscount'])->name('pos.discount');
         Route::post('/pos/item-discount/{id}', [PosController::class, 'applyItemDiscount'])->name('pos.item-discount');
 
-        // Checkout & Payment Processing
         Route::get('/checkout', [PosController::class, 'checkout'])->name('checkout');
         Route::post('/checkout', [PosController::class, 'processCheckout'])->name('checkout.process');
 
-        // Receipt Page Route
         Route::get('/receipt/{id}', [TransactionController::class, 'showReceipt'])->name('receipt');
-
-        // Transaction History
         Route::get('/transactions', [TransactionController::class, 'index'])->name('transaction.history');
     });
  
@@ -104,7 +102,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/inventory/restock-mode', [RestockBatchController::class, 'store'])->name('inventory.restockBatch.store');
     });
 
-    // All Users: User Guide Module
+    // User Guide (All Users)
     Route::get('/user-guide', [UserGuideController::class, 'index'])->name('user-guide');
 
     // Dashboard & Global Utilities
