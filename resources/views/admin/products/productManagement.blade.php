@@ -64,6 +64,7 @@
                     <thead class="bg-gray-50 dark:bg-[#161B26] text-gray-600 dark:text-slate-400 uppercase text-xs border-b-2 border-gray-200 dark:border-[#1e2536]">
                         <tr>
                             <th class="px-8 py-4">Product</th>
+                            <th class="px-8 py-4">SKU / Code</th>
                             <th class="px-8 py-4">Category</th>
                             <th class="px-8 py-4">Cost</th>
                             <th class="px-8 py-4">Price</th>
@@ -94,6 +95,10 @@
                                     @if ($product->approx_volume)
                                         <div class="text-xs text-gray-400 mt-0.5">{{ $product->approx_volume }}</div>
                                     @endif
+                                </td>
+                                <!-- Display SKU / Code -->
+                                <td class="px-8 py-4 font-mono text-xs text-gray-600 dark:text-slate-400">
+                                    {{ $product->code ?? '—' }}
                                 </td>
                                 <td class="px-8 py-4 text-gray-600 dark:text-slate-400 font-medium">{{ $product->category->name ?? '—' }}</td>
                                 <td class="px-8 py-4 text-gray-600 dark:text-slate-400 font-semibold">
@@ -149,7 +154,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="10" class="px-8 py-12 text-center text-gray-400 dark:text-slate-500 font-medium">No products found.</td></tr>
+                            <tr><td colspan="11" class="px-8 py-12 text-center text-gray-400 dark:text-slate-500 font-medium">No products found.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -176,7 +181,7 @@
 
                             <div class="p-3">
                                 <p class="font-bold text-gray-900 dark:text-white text-xs line-clamp-1">{{ $product->product_name }}</p>
-                                <p class="text-[11px] text-gray-400 dark:text-slate-400 mt-0.5 truncate">{{ $product->category->name ?? '—' }}</p>
+                                <p class="text-[11px] font-mono text-gray-400 dark:text-slate-400 mt-0.5 truncate">SKU: {{ $product->code ?? '—' }}</p>
                                 <p class="text-xs font-bold text-gray-900 dark:text-slate-100 mt-1.5">
                                     ₱{{ $product->selling_price !== null ? number_format($product->selling_price, 2) : '—' }}
                                 </p>
@@ -223,12 +228,6 @@
                                 <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Name</label>
                                 <input type="text" name="product_name" value="{{ old('product_name', $product->product_name) }}" required 
                                        class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Description</label>
-                                <textarea name="product_description" rows="2" 
-                                          class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">{{ old('product_description', $product->product_description) }}</textarea>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -288,7 +287,13 @@
                             </div>
 
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Image <span class="text-gray-400 font-normal">(optional)</span></label>
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Description</label>
+                                <textarea name="product_description" rows="2" 
+                                          class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">{{ old('product_description', $product->product_description) }}</textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Replace Image <span class="text-gray-400 font-normal">(optional)</span></label>
                                 <input type="file" name="product_image" 
                                        class="w-full text-xs text-gray-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-gray-100 dark:file:bg-[#161B26] file:text-gray-700 dark:file:text-slate-200 hover:file:bg-gray-200 dark:hover:file:bg-[#1e2536] cursor-pointer">
                             </div>
@@ -338,7 +343,7 @@
                 </div>
             @endforeach
 
-            <!-- Custom Pill Pagination Footer (Auto-hides if items <= 13) -->
+            <!-- Custom Pill Pagination Footer -->
             @if ($products->hasPages())
                 <div class="px-8 py-5 border-t-2 border-gray-200 dark:border-[#1e2536] flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-slate-400">
                     <div>
@@ -384,13 +389,13 @@
 
     </div>
 
-    <!-- Add Product Modal Popup (Themed to match UI) -->
+    <!-- Add Product Modal Popup (Themed to Match Categories Module UI) -->
     <div id="addProductModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="relative w-full max-w-2xl bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-2xl p-8 transform transition-all text-left">
+        <div class="relative w-full max-w-3xl bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-2xl p-8 transform transition-all text-left" onclick="event.stopPropagation()">
             
             <div class="flex items-center justify-between pb-6 mb-6 border-b-2 border-gray-200 dark:border-[#1e2536]">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white">Add New Product</h3>
-                <button type="button" onclick="toggleAddProductModal(false)" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#161B26] transition-colors text-xl font-bold">
+                <button type="button" onclick="toggleAddProductModal(false)" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#161B26] transition-colors text-xl font-bold cursor-pointer">
                     &times;
                 </button>
             </div>
@@ -404,19 +409,13 @@
                     </div>
                 @endif
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Name</label>
-                    <input type="text" name="product_name" value="{{ old('product_name') }}" required 
-                           class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Description</label>
-                    <textarea name="product_description" rows="2" 
-                              class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">{{ old('product_description') }}</textarea>
-                </div>
-
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Name</label>
+                        <input type="text" name="product_name" value="{{ old('product_name') }}" required placeholder="e.g. Purified Drinking Water"
+                               class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Category <span class="text-gray-400 font-normal">(optional)</span></label>
                         <select name="category_id" class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400 cursor-pointer">
@@ -426,56 +425,71 @@
                             @endforeach
                         </select>
                     </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Approx. Volume <span class="text-gray-400 font-normal">(optional)</span></label>
-                        <input type="text" name="approx_volume" value="{{ old('approx_volume') }}" placeholder="e.g. 20L, 5 gallons" 
+                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Approx. Volume <span class="text-gray-400 font-normal">(Optional)</span></label>
+                        <input type="text" name="approx_volume" value="{{ old('approx_volume') }}" placeholder="e.g. 20L, 5 gallons"
+                               class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Volume (Liters) <span class="text-gray-400 font-normal">(Optional)</span></label>
+                        <input type="number" step="0.01" name="volume_liters" value="{{ old('volume_liters') }}" placeholder="e.g. 20"
                                class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Volume (liters) <span class="text-gray-400 font-normal">(optional)</span></label>
-                        <input type="number" step="0.01" name="volume_liters" value="{{ old('volume_liters') }}" 
-                               class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
-                    </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Purchase Cost</label>
-                        <input type="number" step="0.01" name="purchase_cost" value="{{ old('purchase_cost') }}" required 
+                        <input type="number" step="0.01" name="purchase_cost" value="{{ old('purchase_cost') }}" required placeholder="0.00"
                                class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                     </div>
-                </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Selling Price</label>
-                        <input type="number" step="0.01" name="selling_price" value="{{ old('selling_price') }}" required 
-                               class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Store Quantity</label>
-                        <input type="number" name="store_quantity" value="{{ old('store_quantity', 0) }}" required 
+                        <input type="number" step="0.01" name="selling_price" value="{{ old('selling_price') }}" required placeholder="0.00"
                                class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Warehouse Quantity</label>
-                        <input type="number" name="warehouse_quantity" value="{{ old('warehouse_quantity', 0) }}" required 
+                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Store Quantity</label>
+                        <input type="number" name="store_quantity" value="{{ old('store_quantity', 0) }}" required
                                class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                     </div>
+
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Reorder Point <span class="text-gray-400 font-normal">(optional)</span></label>
-                        <input type="number" name="reorder_point" value="{{ old('reorder_point') }}" placeholder="e.g. 10" 
+                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Warehouse Quantity</label>
+                        <input type="number" name="warehouse_quantity" value="{{ old('warehouse_quantity', 0) }}" required
+                               class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Reorder Point <span class="text-gray-400 font-normal">(Optional)</span></label>
+                        <input type="number" name="reorder_point" value="{{ old('reorder_point') }}" placeholder="e.g. 10"
                                class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Image <span class="text-gray-400 font-normal">(optional)</span></label>
-                    <input type="file" name="product_image" 
-                           class="w-full text-xs text-gray-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-gray-100 dark:file:bg-[#161B26] file:text-gray-700 dark:file:text-slate-200 hover:file:bg-gray-200 dark:hover:file:bg-[#1e2536] cursor-pointer">
+                    <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Description <span class="text-gray-400 font-normal">(Optional)</span></label>
+                    <textarea name="product_description" rows="3" placeholder="Enter product details or description..."
+                              class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">{{ old('product_description') }}</textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Image <span class="text-gray-400 font-normal">(Optional)</span></label>
+                    <div class="flex items-center gap-4">
+                        <label class="bg-gray-100 hover:bg-gray-200 dark:bg-[#161B26] dark:hover:bg-[#1e2536] text-gray-700 dark:text-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl cursor-pointer border-2 border-gray-200 dark:border-[#1e2536] transition-colors">
+                            Choose File
+                            <input type="file" name="product_image" accept="image/*" class="hidden" onchange="document.getElementById('fileNameLabel').textContent = this.files[0] ? this.files[0].name : 'No file chosen'">
+                        </label>
+                        <span id="fileNameLabel" class="text-sm text-gray-500 dark:text-slate-400">No file chosen</span>
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-end space-x-3 pt-6 border-t-2 border-gray-200 dark:border-[#1e2536]">
@@ -483,7 +497,7 @@
                         Cancel
                     </button>
                     <button type="submit" class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
-                        Add Product
+                        Save Product
                     </button>
                 </div>
             </form>

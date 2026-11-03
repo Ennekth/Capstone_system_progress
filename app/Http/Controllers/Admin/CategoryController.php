@@ -34,7 +34,7 @@ class CategoryController extends Controller
             $query->where('type', $request->type);
         }
 
-        $categories = $query->orderBy('name')->paginate(8)->withQueryString();
+        $categories = $query->orderBy('name')->paginate(9)->withQueryString();
         $mainCategories = Category::whereNull('parent_id')->orderBy('name')->get();
 
         return view('admin.categories.categoryManagement', [
@@ -123,7 +123,6 @@ class CategoryController extends Controller
         }
 
         $data['code'] = $this->generateUniqueCode($data['name']);
-        $data['status'] = 'ACTIVE';
         Category::create($data);
 
         return redirect()->route('admin.categories.index')->with('success', 'Category created successfully.');
@@ -148,7 +147,6 @@ class CategoryController extends Controller
             'name' => $data['name'],
             'code' => $this->generateUniqueCode($data['name']),
             'type' => $category->type,
-            'status' => 'ACTIVE',
             'description' => $data['description'] ?? null,
         ]);
 
@@ -170,12 +168,21 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
-        if ($category->children()->exists()) {
-            return back()->with('error', 'Cannot delete a category that still has subcategories assigned.');
+        // Check if main category has products directly assigned
+        if ($category->products()->exists()) {
+            return back()->with('error', 'Cannot delete this main category because it still has products assigned to it.');
         }
 
-        if ($category->products()->exists()) {
-            return back()->with('error', 'Cannot delete a category that still has products assigned.');
+        // Check if any subcategory/brand under this main category has products assigned
+        foreach ($category->children as $child) {
+            if ($child->products()->exists()) {
+                return back()->with('error', 'Cannot delete this category because its sub-category/brand ("' . $child->name . '") still has products inside.');
+            }
+        }
+
+        // Check if main category still has subcategories
+        if ($category->children()->exists()) {
+            return back()->with('error', 'Cannot delete a category that still has subcategories assigned.');
         }
 
         if ($category->attachment_path) {
