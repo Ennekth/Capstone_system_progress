@@ -40,7 +40,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     });
 
-    // Admin + Manager: full inventory, approvals, logs
+    // Admin + Manager: full inventory, approvals, logs, and sales records
     Route::middleware('role:admin,manager')->group(function () {
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
         Route::post('/inventory/{product}/transfer', [InventoryController::class, 'transfer'])->name('inventory.transfer');
@@ -94,6 +94,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/inventory/{product}/details', [InventoryController::class, 'show'])->name('inventory.show');
 
         Route::get('/inventory/my-requests', [InventoryController::class, 'myRequests'])->name('inventory.myRequests');
+        Route::post('/inventory/my-requests/{movement}/fulfill', [InventoryController::class, 'fulfill'])->name('inventory.fulfill');
+        Route::post('/inventory/my-requests/store', [InventoryController::class, 'storeRequest'])->name('inventory.storeRequest');
         Route::delete('/inventory/my-requests/{movement}', [InventoryController::class, 'cancelRequest'])->name('inventory.cancelRequest');
         Route::get('/inventory/my-requests/{movement}/edit', [InventoryController::class, 'editRequest'])->name('inventory.editRequest');
         Route::put('/inventory/my-requests/{movement}', [InventoryController::class, 'updateRequest'])->name('inventory.updateRequest');

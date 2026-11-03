@@ -85,7 +85,6 @@ class InventoryController extends Controller
             abort(403, 'Staff can only request store restocks.');
         }
 
-        // Keep the log label consistent with the chosen location
         if (in_array($data['type'], ['restock_store', 'restock_warehouse'])) {
             $data['type'] = $data['location'] === 'store' ? 'restock_store' : 'restock_warehouse';
         }
@@ -103,6 +102,7 @@ class InventoryController extends Controller
                 'approved_by' => $requiresApproval ? null : $user->id,
                 'type' => $data['type'],
                 'status' => $requiresApproval ? 'pending' : 'approved',
+                'delivery_status' => $requiresApproval ? 'pending' : 'received',
                 'quantity_before' => $before,
                 'quantity_after' => $after,
                 'quantity' => $data['quantity'],
@@ -159,6 +159,7 @@ class InventoryController extends Controller
                 'approved_by' => $user->id,
                 'type' => $type,
                 'status' => 'approved',
+                'delivery_status' => 'received',
                 'quantity' => $data['quantity'],
                 'note' => $data['note'] ?? null,
                 'approved_at' => now(),
@@ -186,27 +187,44 @@ class InventoryController extends Controller
             return back()->with('error', 'This request has already been processed.');
         }
 
+        // Approval sets status to approved and delivery status to in_transit without updating inventory quantities yet
+        $movement->update([
+            'status' => 'approved',
+            'delivery_status' => 'in_transit',
+            'approved_by' => Auth::id(),
+            'approved_at' => now(),
+        ]);
+
+        return back()->with('success', 'Restock approved and is now In Transit.');
+    }
+
+    public function fulfill(StockMovement $movement)
+    {
+        // Allow fulfillment if delivery status is in_transit OR request status is approved
+        if ($movement->delivery_status !== 'in_transit' && $movement->status !== 'approved') {
+            return back()->with('error', 'Only in-transit or approved requests can be received.');
+        }
+
         DB::transaction(function () use ($movement) {
             $product = $movement->product;
             $column = str_contains($movement->type, 'warehouse') ? 'warehouse_quantity' : 'store_quantity';
 
             $before = $product->$column;
+            // Increment the product stock
             $product->increment($column, $movement->quantity);
             $after = $before + $movement->quantity;
 
-            $movement->update([
-                'status' => 'approved',
-                'approved_by' => Auth::id(),
-                'approved_at' => now(),
-                'quantity_before' => $before,
-                'quantity_after' => $after,
-            ]);
+            // Use direct property assignment to bypass any fillable array restrictions
+            $movement->delivery_status = 'received';
+            $movement->quantity_before = $before;
+            $movement->quantity_after = $after;
+            $movement->save();
         });
 
-        return back()->with('success', 'Restock approved and applied.');
+        return back()->with('success', 'Restock marked as received and stock updated successfully.');
     }
 
-    public function reject(Request $request, StockMovement $movement)
+   public function reject(Request $request, StockMovement $movement)
     {
         if ($movement->status !== 'pending') {
             return back()->with('error', 'This request has already been processed.');
@@ -216,12 +234,13 @@ class InventoryController extends Controller
             'rejection_reason' => ['required', 'string', 'max:500'],
         ]);
 
-        $movement->update([
-            'status' => 'rejected',
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-            'rejection_reason' => $data['rejection_reason'],
-        ]);
+        // Automatically set delivery_status to 'not_approved' when rejected
+        $movement->status = 'rejected';
+        $movement->delivery_status = 'not_approved';
+        $movement->approved_by = Auth::id();
+        $movement->approved_at = now();
+        $movement->rejection_reason = $data['rejection_reason'];
+        $movement->save();
 
         return back()->with('success', 'Restock request rejected.');
     }
@@ -241,10 +260,8 @@ class InventoryController extends Controller
 
         $movements = $query->orderBy('created_at', 'desc')->get();
 
-        // Group by batch_id
         $grouped = $movements->groupBy(fn($m) => $m->batch_id ?? 'single-' . $m->id);
 
-        // Paginate the grouped collection manually (4 batches per page)
         $page = $request->get('page', 1);
         $perPage = 4;
         $paginatedGroups = new \Illuminate\Pagination\LengthAwarePaginator(
@@ -268,12 +285,49 @@ class InventoryController extends Controller
             ->where('requested_by', Auth::id());
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('delivery_status', $request->status);
         }
 
         $requests = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return view('inventory.myRequests', compact('requests'));
+    }
+
+    public function storeRequest(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!in_array($user->role, ['staff', 'warehouse_staff'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $data = $request->validate([
+            'product_id' => ['required', 'exists:products,id'],
+            'location' => ['required', 'in:store,warehouse'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $product = Product::findOrFail($data['product_id']);
+        $column = $data['location'] === 'store' ? 'store_quantity' : 'warehouse_quantity';
+        $type = $data['location'] === 'store' ? 'restock_store' : 'restock_warehouse';
+
+        DB::transaction(function () use ($product, $data, $user, $column, $type) {
+            StockMovement::create([
+                'product_id' => $product->id,
+                'requested_by' => $user->id,
+                'approved_by' => null,
+                'type' => $type,
+                'status' => 'pending',
+                'delivery_status' => 'pending',
+                'quantity_before' => $product->$column,
+                'quantity_after' => $product->$column,
+                'quantity' => $data['quantity'],
+                'note' => $data['note'] ?? null,
+            ]);
+        });
+
+        return back()->with('success', 'Restock request submitted successfully for approval.');
     }
 
     public function cancelRequest(StockMovement $movement)

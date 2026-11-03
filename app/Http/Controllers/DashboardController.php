@@ -18,6 +18,11 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        // Redirect staff users away from the dashboard entirely to POS
+        if ($user->role === 'staff') {
+            return redirect()->route('pos');
+        }
+
         $data = $this->sharedMetrics();
 
         if (in_array($user->role, ['admin', 'manager'])) {
