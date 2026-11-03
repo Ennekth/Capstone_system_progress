@@ -82,6 +82,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/pos/add/{id}', [PosController::class, 'addToCart'])->name('pos.add');
         Route::post('/pos/remove/{id}', [PosController::class, 'removeFromCart'])->name('pos.remove');
         Route::post('/pos/clear', [PosController::class, 'clearCart'])->name('pos.clear');
+        Route::post('/pos/hold', [PosController::class, 'holdOrder'])->name('pos.hold');
+        Route::get('/pos/parked/{index}', [PosController::class, 'restoreParkedOrder'])->name('pos.parked.restore');
+        Route::delete('/pos/parked/{index}', [PosController::class, 'deleteParkedOrder'])->name('pos.parked.delete');
         Route::post('/pos/discount', [PosController::class, 'applyDiscount'])->name('pos.discount');
         Route::post('/pos/item-discount/{id}', [PosController::class, 'applyItemDiscount'])->name('pos.item-discount');
 

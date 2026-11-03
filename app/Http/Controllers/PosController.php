@@ -39,7 +39,9 @@ class PosController extends Controller
 
         // Standardized to 24 items per page for POS layout grid
         $items = $query->orderBy('product_name')->paginate(24)->withQueryString();
-        $categories = Category::orderBy('name')->get();
+        
+        // Fetch parent categories along with children for structured dropdown layout
+        $categories = Category::whereNull('parent_id')->with('children')->orderBy('name')->get();
 
         $cart = session()->get('cart', []);
         $rawSubtotal = 0;
@@ -106,40 +108,51 @@ class PosController extends Controller
     {
         $data = $request->validate(['quantity' => ['required', 'integer']]);
         $product = Product::findOrFail($id);
-        $quantity = $data['quantity'];
+        $quantityChange = $data['quantity']; // Can be +1 or -1
+        
         $cart = session()->get('cart', []);
-        $currentQuantity = isset($cart[$id]) ? $cart[$id]['quantity'] : 0;
-        $newTotalQuantity = $currentQuantity + $quantity;
+        $currentCartQty = isset($cart[$id]) ? $cart[$id]['quantity'] : 0;
+        $newCartQty = $currentCartQty + $quantityChange;
 
-        if ($newTotalQuantity < 0) {
-            $newTotalQuantity = 0;
+        if ($newCartQty < 0) {
+            $newCartQty = 0;
         }
 
-        if ($newTotalQuantity > $product->store_quantity) {
-            return redirect()->route('pos')
-                ->with('error', 'Not enough stock for ' . $product->product_name . '. Available stock: ' . $product->store_quantity);
+        // If trying to add more than available store stock
+        if ($quantityChange > 0 && $product->store_quantity < $quantityChange) {
+            return redirect()->route('pos')->with('error', 'Not enough stock for ' . $product->product_name . '. Available stock: ' . $product->store_quantity);
         }
 
-        if ($newTotalQuantity === 0) {
-            unset($cart[$id]);
-        } else {
-            if (isset($cart[$id])) {
-                $cart[$id]['quantity'] = $newTotalQuantity;
+        return DB::transaction(function () use ($product, $id, $quantityChange, $currentCartQty, $newCartQty, &$cart) {
+            if ($quantityChange > 0) {
+                // Decrement store stock in database instantly
+                $product->decrement('store_quantity', $quantityChange);
             } else {
-                $cart[$id] = [
-                    'product_name' => $product->product_name,
-                    'selling_price' => $product->selling_price,
-                    'quantity' => $quantity,
-                    'item_discount_type' => 'none',
-                    'item_discount_value' => 0,
-                    'item_discount_scope' => 'whole',
-                ];
+                // Increment store stock back when decreasing quantity in cart
+                $product->increment('store_quantity', abs($quantityChange));
             }
-        }
 
-        session()->put('cart', $cart);
+            if ($newCartQty === 0) {
+                unset($cart[$id]);
+            } else {
+                if (isset($cart[$id])) {
+                    $cart[$id]['quantity'] = $newCartQty;
+                } else {
+                    $cart[$id] = [
+                        'product_name' => $product->product_name,
+                        'selling_price' => $product->selling_price,
+                        'quantity' => $newCartQty,
+                        'item_discount_type' => 'none',
+                        'item_discount_value' => 0,
+                        'item_discount_scope' => 'whole',
+                    ];
+                }
+            }
 
-        return redirect()->route('pos');
+            session()->put('cart', $cart);
+
+            return redirect()->route('pos');
+        });
     }
 
     public function removeFromCart($id)
@@ -147,6 +160,12 @@ class PosController extends Controller
         $cart = session()->get('cart', []);
 
         if (isset($cart[$id])) {
+            $product = Product::find($id);
+            if ($product) {
+                // Return stock back to inventory
+                $product->increment('store_quantity', $cart[$id]['quantity']);
+            }
+
             unset($cart[$id]);
             session()->put('cart', $cart);
         }
@@ -156,8 +175,97 @@ class PosController extends Controller
 
     public function clearCart()
     {
+        $cart = session()->get('cart', []);
+        
+        foreach ($cart as $productId => $item) {
+            $product = Product::find($productId);
+            if ($product) {
+                $product->increment('store_quantity', $item['quantity']);
+            }
+        }
+
         session()->forget(['cart', 'cart_discount']);
-        return redirect()->route('pos')->with('success', 'Cart cleared successfully.');
+        return redirect()->route('pos');
+    }
+
+    public function holdOrder(Request $request)
+    {
+        $cart = session()->get('cart', []);
+        $cartDiscount = session()->get('cart_discount', ['type' => 'none', 'value' => 0, 'mode' => 'percentage']);
+
+        if (empty($cart)) {
+            return redirect()->route('pos')->with('error', 'Cannot hold an empty order.');
+        }
+
+        $parkedOrders = session()->get('parked_orders', []);
+        
+        $parkedOrders[] = [
+            'id' => 'HOLD-' . strtoupper(substr(uniqid(), -6)),
+            'time' => now()->format('M d, h:i A'),
+            'cart' => $cart,
+            'cart_discount' => $cartDiscount,
+            'item_count' => array_sum(array_column($cart, 'quantity')),
+        ];
+
+        session()->put('parked_orders', $parkedOrders);
+        session()->forget(['cart', 'cart_discount']);
+
+        return redirect()->route('pos');
+    }
+
+    public function restoreParkedOrder($index)
+    {
+        $parkedOrders = session()->get('parked_orders', []);
+
+        if (!isset($parkedOrders[$index])) {
+            return redirect()->route('pos')->with('error', 'Parked order not found.');
+        }
+
+        $parkedOrder = $parkedOrders[$index];
+        $currentCart = session()->get('cart', []);
+
+        // Merge parked items directly into cart without double-decreasing stock
+        foreach ($parkedOrder['cart'] as $productId => $parkedItem) {
+            if (isset($currentCart[$productId])) {
+                $currentCart[$productId]['quantity'] += $parkedItem['quantity'];
+            } else {
+                $currentCart[$productId] = $parkedItem;
+            }
+        }
+
+        $currentCartDiscount = session()->get('cart_discount', ['type' => 'none', 'value' => 0, 'mode' => 'percentage']);
+        if (($currentCartDiscount['type'] ?? 'none') === 'none' && isset($parkedOrder['cart_discount'])) {
+            session()->put('cart_discount', $parkedOrder['cart_discount']);
+        }
+
+        session()->put('cart', $currentCart);
+
+        unset($parkedOrders[$index]);
+        session()->put('parked_orders', array_values($parkedOrders));
+
+        // Redirect quietly without redundant flash messages
+        return redirect()->route('pos');
+    }
+
+    public function deleteParkedOrder($index)
+    {
+        $parkedOrders = session()->get('parked_orders', []);
+
+        if (isset($parkedOrders[$index])) {
+            $parked = $parkedOrders[$index];
+            
+            foreach ($parked['cart'] as $productId => $item) {
+                $product = Product::find($productId);
+                if ($product) {
+                    $product->increment('store_quantity', $item['quantity']);
+                }
+            }
+
+            unset($parkedOrders[$index]);
+            session()->put('parked_orders', array_values($parkedOrders));
+        }
+
+        return redirect()->route('pos');
     }
 
     public function applyDiscount(Request $request)
@@ -184,7 +292,7 @@ class PosController extends Controller
 
         if ($type === 'none') {
             session()->forget('cart_discount');
-            return redirect()->route('pos')->with('success', 'Cart discount removed.');
+            return redirect()->route('pos');
         }
 
         $value = 0;
@@ -208,7 +316,7 @@ class PosController extends Controller
             'mode' => $mode,
         ]));
 
-        return redirect()->route('pos')->with('success', 'Cart discount applied successfully.');
+        return redirect()->route('pos');
     }
 
     public function applyItemDiscount(Request $request, $id)
@@ -228,7 +336,7 @@ class PosController extends Controller
             session()->put('cart', $cart);
         }
 
-        return redirect()->route('pos')->with('success', 'Item discount updated successfully.');
+        return redirect()->route('pos');
     }
 
     // ==================== CHECKOUT ====================
@@ -379,10 +487,6 @@ class PosController extends Controller
             foreach ($cart as $productId => $item) {
                 $product = Product::findOrFail($productId);
 
-                if ($product->store_quantity < $item['quantity']) {
-                    throw new \Exception('Not enough stock for ' . $product->product_name);
-                }
-
                 $baseItemSubtotal = $item['selling_price'] * $item['quantity'];
                 $itemDiscountAmount = 0;
                 
@@ -421,8 +525,6 @@ class PosController extends Controller
                     'quantity' => $item['quantity'],
                     'source' => 'pos',
                 ]);
-
-                $product->decrement('store_quantity', $item['quantity']);
             }
 
             return $transaction;
