@@ -13,8 +13,15 @@ class ForecastSettingController extends Controller
     public function index()
     {
         $global = ForecastSetting::where('scope', 'global')->first();
-        $categorySettings = ForecastSetting::with('category')->where('scope', 'category')->get();
-        $productSettings = ForecastSetting::with('product')->where('scope', 'product')->get();
+        
+        // Eager-load updatedBy, category, and product with its category
+        $categorySettings = ForecastSetting::with(['category', 'updatedBy'])
+            ->where('scope', 'category')
+            ->get();
+            
+        $productSettings = ForecastSetting::with(['product.category', 'updatedBy'])
+            ->where('scope', 'product')
+            ->get();
 
         $categories = Category::where('type', 'product')->orderBy('name')->get();
         $products = Product::orderBy('product_name')->get();
