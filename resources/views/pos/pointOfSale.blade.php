@@ -48,7 +48,7 @@
         <div class="flex-[2] flex flex-col gap-6">
             
             <!-- Filter Bar & View Switcher -->
-            <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-sm p-5 flex flex-col md:flex-row items-center justify-between gap-4">
                 <form id="filterForm" method="GET" action="{{ route('pos') }}" class="relative w-full md:w-80">
                     @if(request('category_id'))
                         <input type="hidden" name="category_id" value="{{ request('category_id') }}">
@@ -59,13 +59,13 @@
                         </svg>
                     </span>
                     <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="Search items or categories..." autocomplete="off"
-                           class="w-full rounded-xl bg-gray-50 dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-400">
+                           class="w-full rounded-xl bg-gray-50 dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] pl-10 pr-4 py-2 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:border-slate-400">
                 </form>
 
                 <div class="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
                     <!-- Structured Category Dropdown -->
                     <select onchange="window.location.href=this.value"
-                            class="w-full sm:w-60 rounded-xl bg-gray-50 dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400 cursor-pointer">
+                            class="w-full sm:w-56 rounded-xl bg-gray-50 dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-3.5 py-2 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400 cursor-pointer">
                         <option value="{{ route('pos', ['search' => request('search')]) }}">All Categories</option>
                         @foreach ($categories as $category)
                             <option value="{{ route('pos', ['category_id' => $category->id, 'search' => request('search')]) }}"
@@ -98,62 +98,82 @@
             <!-- Product Containers (Grid & List View Switcher Wrappers) -->
             <div class="overflow-y-auto pr-1">
                 
-                <!-- GRID VIEW CONTAINER -->
-                <div id="productGridView" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 pb-4">
+                <!-- GRID VIEW CONTAINER (Optimized 3-to-4 column POS layout) -->
+                <div id="productGridView" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 pb-4">
                     @forelse ($items as $item)
                         @php
                             $cartQty = isset($cart[$item->id]) ? $cart[$item->id]['quantity'] : 0;
                             $remainingStock = $item->store_quantity;
+                            $reorderPoint = $item->reorder_point ?? 10;
+
+                            if ($remainingStock <= 0) {
+                                $statusClass = 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border-rose-200 dark:border-rose-900';
+                                $statusText = 'Out of Stock';
+                            } elseif ($remainingStock <= $reorderPoint) {
+                                $statusClass = 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-900';
+                                $statusText = 'Low (' . $remainingStock . ')';
+                            } else {
+                                $statusClass = 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900';
+                                $statusText = 'In Stock (' . $remainingStock . ')';
+                            }
                         @endphp
 
-                        @if($remainingStock > 0)
-                            <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl p-6 flex flex-col justify-between shadow-xs transition-all duration-200">
-                                <div>
-                                    <h3 class="font-bold text-gray-900 dark:text-white">{{ $item->product_name }}</h3>
-                                    <p class="text-xs text-gray-400 dark:text-slate-500 mt-1">{{ $item->category->name ?? 'Uncategorized' }}</p>
-                                </div>
-
-                                <div class="mt-6 flex items-center justify-between">
-                                    <span class="text-lg font-bold text-gray-900 dark:text-slate-100">₱{{ number_format($item->selling_price, 2) }}</span>
-                                    <span class="text-xs font-semibold text-gray-500 dark:text-slate-400 bg-gray-100 dark:bg-[#161B26] px-2.5 py-1 rounded-full border border-gray-200 dark:border-[#1e2536]">Stock: {{ $remainingStock }}</span>
-                                </div>
-
-                                <div class="mt-6 pt-4 border-t-2 border-gray-100 dark:border-[#1e2536] flex items-center justify-between">
-                                    <span class="text-xs font-semibold text-gray-500 dark:text-slate-400">In Cart: <strong class="text-gray-900 dark:text-white">{{ $cartQty }}</strong></span>
-                                    
-                                    <div class="flex items-center border-2 border-gray-200 dark:border-[#1e2536] rounded-xl overflow-hidden bg-gray-50 dark:bg-[#161B26]" onclick="event.stopPropagation()">
-                                        @if($cartQty > 0)
-                                            <form action="{{ route('pos.add', $item->id) }}" method="POST" class="inline">
-                                                @csrf
-                                                <input type="hidden" name="quantity" value="-1">
-                                                <button type="submit" class="px-3 py-1.5 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#1e2536] transition-colors text-xs font-bold cursor-pointer" title="Decrease">-</button>
-                                            </form>
+                        <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-2xl p-4 flex flex-col justify-between shadow-xs transition-all duration-200 {{ $remainingStock <= 0 ? 'opacity-60' : '' }}">
+                            <div>
+                                <!-- Thumbnail & Status Badge Header -->
+                                <div class="flex items-start justify-between gap-2 mb-2.5">
+                                    <div class="w-12 h-12 rounded-xl bg-gray-100 dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] flex items-center justify-center overflow-hidden shrink-0">
+                                        @if($item->product_image)
+                                            <img src="{{ asset('storage/' . $item->product_image) }}" alt="{{ $item->product_name }}" class="w-full h-full object-cover">
                                         @else
-                                            <button type="button" disabled class="px-3 py-1.5 text-gray-300 dark:text-slate-600 text-xs font-bold cursor-not-allowed">-</button>
+                                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                                         @endif
+                                    </div>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border {{ $statusClass }}">
+                                        {{ $statusText }}
+                                    </span>
+                                </div>
 
-                                        <span class="px-3.5 py-1.5 text-xs font-bold text-gray-900 dark:text-slate-100">{{ $cartQty }}</span>
+                                <!-- Product Info -->
+                                <h3 class="font-bold text-gray-900 dark:text-white text-xs line-clamp-1">{{ $item->product_name }}</h3>
+                                <p class="text-[11px] text-gray-400 dark:text-slate-500 truncate mt-0.5">
+                                    {{ $item->category->parent->name ?? $item->category->name ?? 'Uncategorized' }} 
+                                    @if(isset($item->category->parent)) › {{ $item->category->name }} @endif
+                                </p>
+                                <p class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
+                                    Unit: {{ $item->unit_of_measure ?? 'Piece' }}
+                                </p>
+                            </div>
 
+                            <!-- Pricing & Quick-Add Controls -->
+                            <div class="mt-3.5 pt-3 border-t border-gray-100 dark:border-[#1e2536] flex items-center justify-between gap-2">
+                                <span class="text-sm font-extrabold text-gray-900 dark:text-slate-100">₱{{ number_format($item->selling_price, 2) }}</span>
+
+                                <div class="flex items-center border border-gray-200 dark:border-[#1e2536] rounded-lg overflow-hidden bg-gray-50 dark:bg-[#161B26]">
+                                    @if($cartQty > 0)
+                                        <form action="{{ route('pos.add', $item->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            <input type="hidden" name="quantity" value="-1">
+                                            <button type="submit" class="px-2 py-1 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#1e2536] text-xs font-bold cursor-pointer">-</button>
+                                        </form>
+                                    @else
+                                        <button type="button" disabled class="px-2 py-1 text-gray-300 dark:text-slate-600 text-xs font-bold cursor-not-allowed">-</button>
+                                    @endif
+
+                                    <span class="px-2.5 py-1 text-xs font-bold text-gray-900 dark:text-slate-100">{{ $cartQty }}</span>
+
+                                    @if($remainingStock > 0)
                                         <form action="{{ route('pos.add', $item->id) }}" method="POST" class="inline">
                                             @csrf
                                             <input type="hidden" name="quantity" value="1">
-                                            <button type="submit" class="px-3 py-1.5 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#1e2536] transition-colors text-xs font-bold cursor-pointer" title="Increase">+</button>
+                                            <button type="submit" class="px-2 py-1 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#1e2536] text-xs font-bold cursor-pointer">+</button>
                                         </form>
-                                    </div>
+                                    @else
+                                        <button type="button" disabled class="px-2 py-1 text-gray-300 dark:text-slate-600 text-xs font-bold cursor-not-allowed">+</button>
+                                    @endif
                                 </div>
                             </div>
-                        @else
-                            <div class="bg-gray-50/50 dark:bg-[#10141D]/50 border-2 border-gray-200/60 dark:border-[#1e2536]/60 rounded-3xl p-6 flex flex-col justify-between opacity-60 pointer-events-none select-none">
-                                <div>
-                                    <h3 class="font-bold text-gray-500 dark:text-slate-400">{{ $item->product_name }}</h3>
-                                    <p class="text-xs text-gray-400 dark:text-slate-600 mt-1">{{ $item->category->name ?? 'Uncategorized' }}</p>
-                                </div>
-                                <div class="mt-6 flex items-end justify-between">
-                                    <span class="text-lg font-bold text-gray-400 dark:text-slate-500">₱{{ number_format($item->selling_price, 2) }}</span>
-                                    <span class="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 rounded-full border border-rose-200 dark:border-rose-900">Out of Stock</span>
-                                </div>
-                            </div>
-                        @endif
+                        </div>
                     @empty
                         <div class="col-span-full py-16 text-center text-gray-400 dark:text-slate-500 font-medium text-sm">
                             No products found matching your criteria.
@@ -162,57 +182,78 @@
                 </div>
 
                 <!-- LIST VIEW CONTAINER -->
-                <div id="productListView" class="hidden flex flex-col gap-3 pb-4">
+                <div id="productListView" class="hidden flex flex-col gap-2.5 pb-4">
                     @forelse ($items as $item)
                         @php
                             $cartQty = isset($cart[$item->id]) ? $cart[$item->id]['quantity'] : 0;
                             $remainingStock = $item->store_quantity;
+                            $reorderPoint = $item->reorder_point ?? 10;
+
+                            if ($remainingStock <= 0) {
+                                $statusClass = 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border-rose-200 dark:border-rose-900';
+                                $statusText = 'Out of Stock';
+                            } elseif ($remainingStock <= $reorderPoint) {
+                                $statusClass = 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-900';
+                                $statusText = 'Low (' . $remainingStock . ')';
+                            } else {
+                                $statusClass = 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900';
+                                $statusText = 'In Stock (' . $remainingStock . ')';
+                            }
                         @endphp
 
-                        @if($remainingStock > 0)
-                            <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-2xl p-4 flex items-center justify-between gap-4 shadow-xs">
-                                <div class="flex-1 min-w-0">
-                                    <h3 class="font-bold text-gray-900 dark:text-white truncate">{{ $item->product_name }}</h3>
-                                    <p class="text-xs text-gray-400 dark:text-slate-500">{{ $item->category->name ?? 'Uncategorized' }}</p>
+                        <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-xl px-4 py-3 flex items-center justify-between gap-4 shadow-xs {{ $remainingStock <= 0 ? 'opacity-60' : '' }}">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] flex items-center justify-center overflow-hidden shrink-0">
+                                    @if($item->product_image)
+                                        <img src="{{ asset('storage/' . $item->product_image) }}" alt="{{ $item->product_name }}" class="w-full h-full object-cover">
+                                    @else
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                                    @endif
+                                </div>
+                                <div class="min-w-0">
+                                    <h3 class="font-bold text-gray-900 dark:text-white text-xs truncate">{{ $item->product_name }}</h3>
+                                    <p class="text-[11px] text-gray-400 dark:text-slate-500 truncate">
+                                        {{ $item->category->parent->name ?? $item->category->name ?? 'Uncategorized' }} 
+                                        @if(isset($item->category->parent)) › {{ $item->category->name }} @endif
+                                        <span class="text-emerald-600 dark:text-emerald-400 font-semibold">({{ $item->unit_of_measure ?? 'Piece' }})</span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-4 shrink-0">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border {{ $statusClass }}">
+                                    {{ $statusText }}
+                                </span>
+
+                                <div class="text-right">
+                                    <span class="text-sm font-bold text-gray-900 dark:text-slate-100">₱{{ number_format($item->selling_price, 2) }}</span>
                                 </div>
 
-                                <div class="text-right shrink-0">
-                                    <span class="text-base font-bold text-gray-900 dark:text-slate-100">₱{{ number_format($item->selling_price, 2) }}</span>
-                                    <p class="text-[11px] text-gray-500 dark:text-slate-400">Stock: {{ $remainingStock }}</p>
-                                </div>
+                                <div class="flex items-center border border-gray-200 dark:border-[#1e2536] rounded-lg overflow-hidden bg-gray-50 dark:bg-[#161B26]">
+                                    @if($cartQty > 0)
+                                        <form action="{{ route('pos.add', $item->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            <input type="hidden" name="quantity" value="-1">
+                                            <button type="submit" class="px-2.5 py-1 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#1e2536] text-xs font-bold">-</button>
+                                        </form>
+                                    @else
+                                        <button type="button" disabled class="px-2.5 py-1 text-gray-300 dark:text-slate-600 text-xs font-bold cursor-not-allowed">-</button>
+                                    @endif
 
-                                <div class="flex items-center gap-4 shrink-0">
-                                    <span class="text-xs text-gray-500 hidden sm:inline">In Cart: <strong>{{ $cartQty }}</strong></span>
-                                    <div class="flex items-center border-2 border-gray-200 dark:border-[#1e2536] rounded-xl overflow-hidden bg-gray-50 dark:bg-[#161B26]">
-                                        @if($cartQty > 0)
-                                            <form action="{{ route('pos.add', $item->id) }}" method="POST" class="inline">
-                                                @csrf
-                                                <input type="hidden" name="quantity" value="-1">
-                                                <button type="submit" class="px-3 py-1.5 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#1e2536] text-xs font-bold">-</button>
-                                            </form>
-                                        @else
-                                            <button type="button" disabled class="px-3 py-1.5 text-gray-300 dark:text-slate-600 text-xs font-bold cursor-not-allowed">-</button>
-                                        @endif
+                                    <span class="px-2.5 py-1 text-xs font-bold text-gray-900 dark:text-slate-100">{{ $cartQty }}</span>
 
-                                        <span class="px-3 py-1.5 text-xs font-bold text-gray-900 dark:text-slate-100">{{ $cartQty }}</span>
-
+                                    @if($remainingStock > 0)
                                         <form action="{{ route('pos.add', $item->id) }}" method="POST" class="inline">
                                             @csrf
                                             <input type="hidden" name="quantity" value="1">
-                                            <button type="submit" class="px-3 py-1.5 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#1e2536] text-xs font-bold">+</button>
+                                            <button type="submit" class="px-2.5 py-1 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-[#1e2536] text-xs font-bold">+</button>
                                         </form>
-                                    </div>
+                                    @else
+                                        <button type="button" disabled class="px-2.5 py-1 text-gray-300 dark:text-slate-600 text-xs font-bold cursor-not-allowed">+</button>
+                                    @endif
                                 </div>
                             </div>
-                        @else
-                            <div class="bg-gray-50/50 dark:bg-[#10141D]/50 border-2 border-gray-200/60 dark:border-[#1e2536]/60 rounded-2xl p-4 flex items-center justify-between opacity-60 pointer-events-none select-none">
-                                <div>
-                                    <h3 class="font-bold text-gray-500 dark:text-slate-400">{{ $item->product_name }}</h3>
-                                    <p class="text-xs text-gray-400 dark:text-slate-600">{{ $item->category->name ?? 'Uncategorized' }}</p>
-                                </div>
-                                <span class="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 rounded-full border border-rose-200 dark:border-rose-900">Out of Stock</span>
-                            </div>
-                        @endif
+                        </div>
                     @empty
                     @endforelse
                 </div>
@@ -221,10 +262,10 @@
         </div>
 
         <!-- ORDER SUMMARY SIDEBAR -->
-        <div class="flex-1 bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-sm p-8 flex flex-col justify-between h-fit min-h-[550px]">
+        <div class="flex-1 bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-sm p-6 flex flex-col justify-between h-fit min-h-[520px]">
             <div>
-                <div class="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-100 dark:border-[#1e2536]">
-                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Order Summary</h2>
+                <div class="flex items-center justify-between mb-4 pb-3 border-b-2 border-gray-100 dark:border-[#1e2536]">
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Order Summary</h2>
 
                     <div class="flex items-center gap-2">
                         @if (count($cart) > 0)
@@ -244,64 +285,64 @@
                 </div>
 
                 @if (count($cart) > 0)
-                    <div class="divide-y divide-gray-100 dark:divide-[#1e2536] max-h-[360px] overflow-y-auto pr-1">
+                    <div class="divide-y divide-gray-100 dark:divide-[#1e2536] max-h-[320px] overflow-y-auto pr-1">
                         @foreach ($cart as $id => $item)
-                            <div class="py-4 flex flex-col gap-3 group border-b-2 border-gray-100 dark:border-[#1e2536]">
+                            <div class="py-3 flex flex-col gap-2.5 group border-b border-gray-100 dark:border-[#1e2536]">
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="flex-1">
                                         <div class="flex items-center justify-between">
-                                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ $item['product_name'] }}</h3>
-                                            <span class="text-sm font-bold text-gray-900 dark:text-slate-100">₱{{ number_format($item['subtotal'], 2) }}</span>
+                                            <h3 class="text-xs font-bold text-gray-900 dark:text-white">{{ $item['product_name'] }}</h3>
+                                            <span class="text-xs font-bold text-gray-900 dark:text-slate-100">₱{{ number_format($item['subtotal'], 2) }}</span>
                                         </div>
-                                        <p class="text-xs text-gray-400 dark:text-slate-400 mt-0.5">Qty: {{ $item['quantity'] }} × ₱{{ number_format($item['selling_price'], 2) }}</p>
+                                        <p class="text-[11px] text-gray-400 dark:text-slate-400 mt-0.5">Qty: {{ $item['quantity'] }} × ₱{{ number_format($item['selling_price'], 2) }}</p>
                                         
                                         @if(($item['item_discount_type'] ?? 'none') !== 'none' && ($item['item_discount_amount'] ?? 0) > 0)
-                                            <p class="text-xs font-medium text-rose-600 dark:text-rose-400 mt-1 flex items-center gap-1">
+                                            <p class="text-[11px] font-medium text-rose-600 dark:text-rose-400 mt-0.5 flex items-center gap-1">
                                                 <span>Item Disc:</span>
                                                 <span>-₱{{ number_format($item['item_discount_amount'], 2) }}</span>
-                                                <span class="text-[10px] text-gray-400">({{ ($item['item_discount_scope'] ?? 'whole') === 'per_item' ? 'Per Piece' : 'Whole Row' }})</span>
+                                                <span class="text-[9px] text-gray-400">({{ ($item['item_discount_scope'] ?? 'whole') === 'per_item' ? 'Per Piece' : 'Whole Row' }})</span>
                                             </p>
                                         @endif
                                     </div>
                                     <form action="{{ route('pos.remove', $id) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="text-gray-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors p-1 cursor-pointer" title="Remove item">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
                                     </form>
                                 </div>
 
                                 <!-- Per-Item Discount Form -->
-                                <form action="{{ route('pos.item-discount', $id) }}" method="POST" class="flex flex-wrap items-center gap-2 pt-1 text-xs bg-gray-50 dark:bg-[#161B26] p-2.5 rounded-xl border-2 border-gray-200 dark:border-[#1e2536]">
+                                <form action="{{ route('pos.item-discount', $id) }}" method="POST" class="flex flex-wrap items-center gap-1.5 pt-1 text-[11px] bg-gray-50 dark:bg-[#161B26] p-2 rounded-xl border border-gray-200 dark:border-[#1e2536]">
                                     @csrf
-                                    <select name="item_discount_type" class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-lg px-2 py-1 text-gray-600 dark:text-slate-300 text-xs cursor-pointer">
+                                    <select name="item_discount_type" class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-md px-1.5 py-0.5 text-gray-600 dark:text-slate-300 text-[10px] cursor-pointer">
                                         <option value="none" {{ ($item['item_discount_type'] ?? '') == 'none' ? 'selected' : '' }}>No Disc</option>
                                         <option value="amount" {{ ($item['item_discount_type'] ?? '') == 'amount' ? 'selected' : '' }}>Disc (₱)</option>
                                         <option value="percentage" {{ ($item['item_discount_type'] ?? '') == 'percentage' ? 'selected' : '' }}>Disc (%)</option>
                                     </select>
 
-                                    <select name="item_discount_scope" class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-lg px-2 py-1 text-gray-600 dark:text-slate-300 text-xs cursor-pointer">
+                                    <select name="item_discount_scope" class="bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-md px-1.5 py-0.5 text-gray-600 dark:text-slate-300 text-[10px] cursor-pointer">
                                         <option value="whole" {{ ($item['item_discount_scope'] ?? 'whole') == 'whole' ? 'selected' : '' }}>Whole Row</option>
                                         <option value="per_item" {{ ($item['item_discount_scope'] ?? '') == 'per_item' ? 'selected' : '' }}>Per Piece</option>
                                     </select>
 
                                     <input type="number" step="0.01" min="0" name="item_discount_value" value="{{ $item['item_discount_value'] ?? '' }}" placeholder="Value"
-                                           class="w-20 bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-lg px-2.5 py-1 text-gray-900 dark:text-slate-100 text-xs focus:outline-none focus:border-slate-400">
+                                           class="w-16 bg-white dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] rounded-md px-2 py-0.5 text-gray-900 dark:text-slate-100 text-[10px] focus:outline-none">
                                     
-                                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1 rounded-lg transition-colors ml-auto cursor-pointer">Set</button>
+                                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-0.5 rounded-md transition-colors ml-auto cursor-pointer">Set</button>
                                 </form>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <div class="py-20 text-center text-gray-400 dark:text-slate-500 font-medium text-sm">
+                    <div class="py-16 text-center text-gray-400 dark:text-slate-500 font-medium text-xs">
                         Your cart is empty. Use the +/- buttons on product cards to add items.
                     </div>
                 @endif
             </div>
 
             <!-- Cart Footer Totals & Discounts Integration -->
-            <div class="pt-6 border-t-2 border-gray-200 dark:border-[#1e2536] mt-6">
+            <div class="pt-4 border-t-2 border-gray-200 dark:border-[#1e2536] mt-4">
                 @php
                     $discountedItemsList = [];
                     foreach ($cart as $item) {
@@ -312,7 +353,7 @@
                     $totalAllDiscounts = $totalItemDiscounts + ($discountAmount ?? 0);
                 @endphp
 
-                <div class="space-y-2 mb-6 text-sm">
+                <div class="space-y-1.5 mb-4 text-xs">
                     <div class="flex justify-between text-gray-600 dark:text-slate-400 font-medium">
                         <span>Subtotal</span>
                         <span>₱{{ number_format($subtotal, 2) }}</span>
@@ -320,30 +361,24 @@
                     
                     <div class="flex justify-between items-center text-gray-600 dark:text-slate-400 relative">
                         <button type="button" onclick="openDiscountModal()" class="text-emerald-600 dark:text-emerald-400 hover:underline font-bold text-xs flex items-center gap-1 cursor-pointer z-10">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
                             Discounts ({{ isset($cartDiscount) && $cartDiscount['type'] !== 'none' ? ucfirst(str_replace('_', ' ', $cartDiscount['type'])) : 'Configure' }})
                         </button>
                         <span class="text-rose-600 dark:text-rose-400 font-bold">-₱{{ number_format($totalAllDiscounts, 2) }}</span>
                     </div>
 
                     @if(count($discountedItemsList) > 0 || (isset($cartDiscount) && $cartDiscount['type'] !== 'none'))
-                        <div class="bg-gray-50 dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] rounded-2xl p-4 text-xs space-y-3 my-3">
-                            <div class="flex justify-between text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px] pb-2 border-b-2 border-gray-200 dark:border-[#1e2536]">
-                                <span>Applied Discount Details</span>
-                                <span class="text-emerald-600 dark:text-emerald-400">
-                                    Total Saved: ₱{{ number_format($totalAllDiscounts, 2) }}
-                                </span>
+                        <div class="bg-gray-50 dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] rounded-xl p-3 text-[11px] space-y-2 my-2">
+                            <div class="flex justify-between text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[9px] pb-1.5 border-b border-gray-200 dark:border-[#1e2536]">
+                                <span>Discount Breakdown</span>
+                                <span class="text-emerald-600 dark:text-emerald-400">Saved: ₱{{ number_format($totalAllDiscounts, 2) }}</span>
                             </div>
 
                             @if(count($discountedItemsList) > 0)
-                                <div class="space-y-1.5">
-                                    <p class="font-bold text-gray-700 dark:text-slate-300 text-[11px] uppercase">Item Discounts:</p>
+                                <div class="space-y-1">
                                     @foreach($discountedItemsList as $discItem)
-                                        @php
-                                            $scopeLabel = (($discItem['item_discount_scope'] ?? 'whole') === 'per_item') ? 'Per Piece' : 'Whole Row';
-                                        @endphp
-                                        <div class="flex justify-between items-center text-gray-600 dark:text-slate-400 pl-2 text-[11px]">
-                                            <span class="truncate max-w-[170px]">• {{ $discItem['product_name'] }} <span class="text-[10px] text-gray-400 dark:text-slate-500">({{ $scopeLabel }})</span></span>
+                                        <div class="flex justify-between items-center text-gray-600 dark:text-slate-400 pl-1">
+                                            <span class="truncate max-w-[150px]">• {{ $discItem['product_name'] }}</span>
                                             <span class="text-rose-600 dark:text-rose-400 font-semibold">-₱{{ number_format($discItem['item_discount_amount'], 2) }}</span>
                                         </div>
                                     @endforeach
@@ -351,36 +386,34 @@
                             @endif
 
                             @if(isset($cartDiscount) && $cartDiscount['type'] !== 'none')
-                                <div class="pt-2 border-t-2 border-gray-200 dark:border-[#1e2536] space-y-1 text-[11px]">
-                                    <div class="flex justify-between font-bold text-gray-700 dark:text-slate-300">
-                                        <span>Cart Discount ({{ ucfirst(str_replace('_', ' ', $cartDiscount['type'])) }})</span>
-                                        <span class="text-rose-600 dark:text-rose-400">-₱{{ number_format($discountAmount ?? 0, 2) }}</span>
-                                    </div>
+                                <div class="pt-1.5 border-t border-gray-200 dark:border-[#1e2536] flex justify-between font-bold text-gray-700 dark:text-slate-300">
+                                    <span>Cart Discount ({{ ucfirst(str_replace('_', ' ', $cartDiscount['type'])) }})</span>
+                                    <span class="text-rose-600 dark:text-rose-400">-₱{{ number_format($discountAmount ?? 0, 2) }}</span>
                                 </div>
                             @endif
                         </div>
                     @endif
 
-                    <div class="flex justify-between items-center text-lg font-bold text-gray-900 dark:text-white pt-3 border-t-2 border-gray-100 dark:border-[#1e2536]">
+                    <div class="flex justify-between items-center text-base font-bold text-gray-900 dark:text-white pt-2.5 border-t border-gray-100 dark:border-[#1e2536]">
                         <span>Total</span>
-                        <span class="text-xl">₱{{ number_format($total, 2) }}</span>
+                        <span class="text-lg">₱{{ number_format($total, 2) }}</span>
                     </div>
                 </div>
 
                 @if(count($cart) > 0)
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2.5">
                         <button type="button" onclick="openClearModal()"
-                                class="w-1/3 text-center bg-white border-2 border-rose-600 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-rose-600/80 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white font-semibold py-3 px-3 rounded-xl transition-all duration-300 ease-in-out text-xs sm:text-sm cursor-pointer shadow-xs">
+                                class="w-1/3 text-center bg-white border-2 border-rose-600 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-rose-600/80 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white font-semibold py-2.5 px-2 rounded-xl transition-all text-xs cursor-pointer shadow-xs">
                             Clear
                         </button>
                         <a href="{{ route('checkout') }}"
-                           class="w-2/3 text-center bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-emerald-600/80 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 ease-in-out text-xs sm:text-sm shadow-xs cursor-pointer">
+                           class="w-2/3 text-center bg-white border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-emerald-600/80 dark:text-emerald-400 dark:hover:bg-emerald-600 dark:hover:text-white font-semibold py-2.5 px-3 rounded-xl transition-all text-xs shadow-xs cursor-pointer">
                             Proceed to Checkout
                         </a>
                     </div>
                 @else
                     <button disabled
-                            class="w-full text-center bg-gray-100 dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] text-gray-400 dark:text-slate-600 font-semibold py-3 rounded-xl cursor-not-allowed">
+                            class="w-full text-center bg-gray-100 dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] text-gray-400 dark:text-slate-600 font-semibold py-2.5 rounded-xl cursor-not-allowed text-xs">
                         Proceed to Checkout
                     </button>
                 @endif
@@ -480,7 +513,7 @@
         </div>
     </div>
 
-    <!-- DISCOUNT POPUP MODAL (Enhanced with Employee & Voucher Configs) -->
+    <!-- DISCOUNT POPUP MODAL -->
     <div id="discountModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="relative w-full max-w-lg bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-2xl p-8 transform transition-all text-left max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
             

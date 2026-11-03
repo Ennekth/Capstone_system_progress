@@ -27,7 +27,8 @@ class AuditLogController extends Controller
             $query->where('event', $request->event);
         }
 
-        $logs = $query->paginate(15)->withQueryString();
+        // Updated pagination count to 10 for a clean, non-overflowing UI layout
+        $logs = $query->paginate(16)->withQueryString();
 
         return view('audit-logs.index', compact('logs'));
     }
