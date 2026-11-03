@@ -30,7 +30,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
     });
 
-    // Admin + Manager: Forecast Settings & Audit Logs
+    // Admin + Manager: Forecast Settings & Audit Logs (Strictly restricted)
     Route::middleware('role:admin,manager')->group(function () {
         Route::get('/forecast/settings', [ForecastSettingController::class, 'index'])->name('forecast.settings');
         Route::post('/forecast/settings/global', [ForecastSettingController::class, 'updateGlobal'])->name('forecast.settings.global');
@@ -68,7 +68,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('products', ProductController::class)->except(['show']);
         Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
         Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
-        // Added Subcategory Product Detail Route
+        // Subcategory Product Detail Route
         Route::get('/categories/subcategories/{category}', [CategoryController::class, 'showSubcategoryDetail'])->name('categories.subcategories.show');
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
         Route::post('/categories/{category}/subcategories', [CategoryController::class, 'storeSubcategory'])->name('categories.subcategories.store');

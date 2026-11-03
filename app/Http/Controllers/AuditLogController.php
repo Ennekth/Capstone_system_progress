@@ -11,7 +11,6 @@ class AuditLogController extends Controller
     {
         $query = AuditLog::with('user')->latest();
 
-        // Live Search Logic matching other modules
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -24,7 +23,6 @@ class AuditLogController extends Controller
             });
         }
 
-        // Dropdown Event Filter Logic
         if ($request->filled('event')) {
             $query->where('event', $request->event);
         }
@@ -46,7 +44,9 @@ class AuditLogController extends Controller
             'data' => [
                 'user' => $log->user->full_name ?? $log->user->name ?? 'System / Guest',
                 'event' => ucfirst($log->event),
-                'target_model' => class_basename($log->auditable_type) . ' #' . $log->auditable_id,
+                'target_model' => $this->getSpecificTargetModel($log),
+                'direction_context' => $this->getDirectionContext($log, $old, $new),
+                'description' => $this->generateSummaryDescription($log->event, $log->auditable_type, $old, $new),
                 'ip_address' => $log->ip_address ?? '—',
                 'timestamp' => $log->created_at->format('M d, Y h:i A'),
                 'changes' => $this->formatChangesForHumans($old, $new, $log->event)
@@ -54,10 +54,90 @@ class AuditLogController extends Controller
         ]);
     }
 
+    /**
+     * Resolve a specific target model name (e.g., Product #5 - Aqualife Water Bottle).
+     */
+    private function getSpecificTargetModel($log)
+    {
+        if (!$log->auditable_type || !$log->auditable_id) {
+            if ($log->event === 'login' || $log->event === 'logout') {
+                return 'User Authentication Session';
+            }
+            return 'System Event';
+        }
+
+        $modelClass = $log->auditable_type;
+        $modelName = class_basename($modelClass);
+        $instance = class_exists($modelClass) ? $modelClass::find($log->auditable_id) : null;
+
+        $identifier = '';
+        if ($instance) {
+            if (isset($instance->product_name)) {
+                $identifier = ' (' . $instance->product_name . ')';
+            } elseif (isset($instance->name)) {
+                $identifier = ' (' . $instance->name . ')';
+            } elseif (isset($instance->title)) {
+                $identifier = ' (' . $instance->title . ')';
+            }
+        }
+
+        return "{$modelName} #{$log->auditable_id}{$identifier}";
+    }
+
+    /**
+     * Determine where the action/change originated and where it applied.
+     */
+    private function getDirectionContext($log, $old, $new)
+    {
+        $payload = array_merge(is_array($old) ? $old : [], is_array($new) ? $new : []);
+
+        if (isset($payload['location'])) {
+            return 'Location: ' . ucfirst($payload['location']);
+        }
+        if (isset($payload['direction'])) {
+            return 'Transfer Direction: ' . str_replace('_', ' ', ucwords($payload['direction'], '_'));
+        }
+        if ($log->event === 'login') {
+            return 'Origin: Web Login Portal';
+        }
+        if ($log->event === 'logout') {
+            return 'Origin: User Session Terminated';
+        }
+
+        return 'Origin: Web Dashboard Interface';
+    }
+
+    private function generateSummaryDescription($event, $auditableType, $old, $new)
+    {
+        $action = ucfirst($event);
+
+        if ($event === 'login') {
+            return "User successfully logged into the inventory and POS system.";
+        } elseif ($event === 'logout') {
+            return "User logged out of the system session.";
+        } elseif ($event === 'created') {
+            return "A new record was successfully created and added to the database.";
+        } elseif ($event === 'updated') {
+            return "An existing record was modified with updated attributes.";
+        } elseif ($event === 'deleted') {
+            return "A record was deleted from the system.";
+        }
+
+        return "A '{$action}' event was performed.";
+    }
+
     private function formatChangesForHumans($old, $new, $event)
     {
         $ignoredKeys = ['id', 'created_at', 'updated_at', 'password', 'remember_token'];
         $changes = [];
+
+        if ($event === 'login' || $event === 'logout') {
+            return [[
+                'field' => 'Authentication Status',
+                'old' => 'Inactive',
+                'new' => $event === 'login' ? 'Active Session Started' : 'Session Ended'
+            ]];
+        }
 
         if ($event === 'created' && is_array($new)) {
             foreach ($new as $key => $value) {
@@ -75,7 +155,6 @@ class AuditLogController extends Controller
                 $oldVal = $old[$key] ?? null;
                 $newVal = $new[$key] ?? null;
                 
-                // Only show fields that actually changed
                 if ($oldVal !== $newVal) {
                     $changes[] = [
                         'field' => ucwords(str_replace('_', ' ', $key)),
@@ -85,7 +164,6 @@ class AuditLogController extends Controller
                 }
             }
         } else {
-            // Fallback for general properties/payloads
             $data = is_array($new) && !empty($new) ? $new : (is_array($old) ? $old : []);
             foreach ($data as $key => $value) {
                 if (in_array($key, $ignoredKeys)) continue;

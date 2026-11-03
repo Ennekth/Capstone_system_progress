@@ -1,7 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\User;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
@@ -9,10 +11,9 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-
     public function index()
     {
-        // Paginate users (4 items per page to match dashboard standards)
+        // Paginate users (15 items per page to match standards)
         $users = User::orderBy('lastname')->paginate(15)->withQueryString();
         return view('admin.users.usersManagement', ['users' => $users]);
     }
@@ -91,15 +92,31 @@ class UserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
     }
 
-    public function logout() {
+    public function logout(Request $request) 
+    {
+        $user = Auth::user();
+
+        if ($user) {
+            // Record Logout Event in Audit Logs
+            AuditLog::create([
+                'user_id' => $user->id,
+                'event' => 'logout',
+                'auditable_type' => User::class,
+                'auditable_id' => $user->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+        }
+
         Auth::logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect()->route('login');
     }
 
-    public function login(Request $request){
+    public function login(Request $request)
+    {
         $data = $request->validate([
             'loginname' => ['required'],
             'loginpassword' => ['required'],
@@ -121,9 +138,25 @@ class UserController extends Controller
 
         if (Auth::attempt([$field => $data['loginname'], 'password' => $data['loginpassword']])) {
             $request->session()->regenerate();
-                if ($user->role === 'warehouse_staff') {
-                    return redirect()->route('inventory.view');
-                }
+            
+            // Record Login Event in Audit Logs
+            AuditLog::create([
+                'user_id' => $user->id,
+                'event' => 'login',
+                'auditable_type' => User::class,
+                'auditable_id' => $user->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'new_values' => [
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ],
+            ]);
+
+            if ($user->role === 'warehouse_staff') {
+                return redirect()->route('inventory.view');
+            }
+
             return redirect()->route('home');
         }
 
@@ -131,7 +164,8 @@ class UserController extends Controller
                     ->withInput($request->only('loginname'));
     }
 
-    public function showLogin() {
+    public function showLogin() 
+    {
         return view('auth.login');
     }
 }

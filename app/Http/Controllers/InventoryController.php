@@ -243,7 +243,7 @@ class InventoryController extends Controller
     public function logs(Request $request)
     {
         $query = StockMovement::with(['product.category', 'requester', 'approver'])
-            ->where('status', '!=', 'pending');
+            ->where('status', '!=', 'pending'); // Synchronized to exclude pending requests from logs[cite: 15]
 
         if ($request->filled('category_id')) {
             $query->whereHas('product', function($q) use ($request) {

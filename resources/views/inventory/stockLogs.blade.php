@@ -36,15 +36,26 @@
             @forelse ($grouped as $batchId => $movements)
                 @php
                     $first = $movements->first();
+                    $statusColors = [
+                        'approved' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900',
+                        'pending' => 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-900',
+                        'rejected' => 'bg-red-100 text-red-700 dark:bg-rose-950/80 dark:text-rose-300 border border-red-200 dark:border-rose-900',
+                    ];
                 @endphp
 
                 <div class="bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] rounded-2xl shadow-xs overflow-hidden">
                     <div class="flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-b-2 border-gray-200 dark:border-[#1e2536] bg-gray-50 dark:bg-[#10141D]/50">
-                        <div>
-                            <p class="text-sm font-bold text-gray-900 dark:text-white">
-                                {{ ucwords(str_replace('_', ' ', $first->type)) }} Batch
-                            </p>
-                            <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{{ $first->created_at->format('M d, Y - h:i A') }}</p>
+                        <div class="flex items-center gap-3">
+                            <div>
+                                <p class="text-sm font-bold text-gray-900 dark:text-white">
+                                    {{ ucwords(str_replace('_', ' ', $first->type)) }} Batch
+                                </p>
+                                <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{{ $first->created_at->format('M d, Y - h:i A') }}</p>
+                            </div>
+                            <!-- Status Badge -->
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$first->status] ?? 'bg-gray-100 text-gray-700' }}">
+                                {{ ucfirst($first->status) }}
+                            </span>
                         </div>
                         <div class="text-xs text-gray-600 dark:text-slate-400 text-right">
                             <p>Requested by: <span class="font-semibold text-gray-900 dark:text-white">{{ $first->requester->firstname ?? 'N/A' }} {{ $first->requester->lastname ?? '' }}</span></p>
@@ -59,7 +70,7 @@
                                     <th class="px-6 py-3">Product</th>
                                     <th class="px-6 py-3">Category</th>
                                     <th class="px-6 py-3">Previous Qty</th>
-                                    <th class="px-6 py-3">Added / Changed</th>
+                                    <th class="px-6 py-3">Requested / Added</th>
                                     <th class="px-6 py-3">New Qty</th>
                                 </tr>
                             </thead>
@@ -72,9 +83,14 @@
                                         <td class="px-6 py-3.5 text-gray-600 dark:text-slate-400">
                                             {{ $movement->product->category->name ?? '—' }}
                                         </td>
-                                        <td class="px-6 py-3.5 text-gray-600 dark:text-slate-400">{{ $movement->quantity_before }}</td>
-                                        <td class="px-6 py-3.5 text-emerald-600 dark:text-emerald-400 font-semibold">+{{ $movement->quantity }}</td>
-                                        <td class="px-6 py-3.5 text-gray-900 dark:text-white font-bold">{{ $movement->quantity_after }}</td>
+                                        <td class="px-6 py-3.5 text-gray-600 dark:text-slate-400">{{ $movement->quantity_before ?? '—' }}</td>
+                                        <td class="px-6 py-3.5 {{ $movement->status === 'approved' ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-amber-600 dark:text-amber-400 font-medium' }}">
+                                            {{ $movement->status === 'approved' ? '+' : '' }}{{ $movement->quantity }} 
+                                            @if($movement->status !== 'approved')
+                                                <span class="text-[10px] text-gray-400">({{ ucfirst($movement->status) }})</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-3.5 text-gray-900 dark:text-white font-bold">{{ $movement->quantity_after ?? 'Unchanged' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -86,6 +102,12 @@
                             <span class="font-bold uppercase tracking-wider text-gray-400">Note:</span> {{ $first->note }}
                         </div>
                     @endif
+
+                    @if ($first->rejection_reason && $first->status === 'rejected')
+                        <div class="px-6 py-3.5 text-xs text-rose-500 dark:text-rose-400 border-t border-gray-200 dark:border-[#1e2536] bg-rose-50/50 dark:bg-rose-950/20">
+                            <span class="font-bold uppercase tracking-wider text-rose-400">Rejection Reason:</span> {{ $first->rejection_reason }}
+                        </div>
+                    @endif
                 </div>
             @empty
                 <div class="py-12 text-center text-gray-400 dark:text-slate-500 font-medium">
@@ -94,8 +116,8 @@
             @endforelse
         </div>
 
-        <!-- Custom Pill Pagination Footer (Auto-hides if items <= 4) -->
-        @if ($grouped->hasPages())
+        <!-- Custom Pill Pagination Footer -->
+        @if (isset($grouped) && method_exists($grouped, 'hasPages') && $grouped->hasPages())
             <div class="px-8 py-5 border-t-2 border-gray-200 dark:border-[#1e2536] flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-slate-400">
                 <div>
                     Showing <span class="font-semibold text-gray-900 dark:text-white">{{ $grouped->firstItem() ?? 0 }}</span> to <span class="font-semibold text-gray-900 dark:text-white">{{ $grouped->lastItem() ?? 0 }}</span> of <span class="font-semibold text-gray-900 dark:text-white">{{ $grouped->total() }}</span> results
