@@ -20,11 +20,17 @@
             }
         } catch (e) {}
 
+        // Initialize sidebar state from localStorage or default viewport rules
         (function () {
-            var isDesktop = window.innerWidth >= 1024;
-            if (isDesktop) {
-                document.documentElement.classList.add('sidebar-open');
-            }
+            try {
+                var savedState = localStorage.getItem('sidebarState');
+                var isDesktop = window.innerWidth >= 1024;
+                if (savedState === 'open' || (!savedState && isDesktop)) {
+                    document.documentElement.classList.add('sidebar-open');
+                } else {
+                    document.documentElement.classList.remove('sidebar-open');
+                }
+            } catch (e) {}
         })();
     </script>
     <style>
@@ -100,11 +106,7 @@
             <header class="h-16 bg-white dark:bg-[#10141D] border-b border-slate-200/80 dark:border-[#1e2536] px-6 flex items-center justify-between z-10 shadow-2xs">
                 
                 <div class="flex items-center gap-4">
-                    <button type="button" data-sidebar-toggle class="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1e2536]/60 rounded-lg transition-colors cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
+                    <!-- Top-bar hamburger toggle button removed completely -->
                 </div>
 
                 <!-- Right Utility Actions -->
@@ -164,7 +166,6 @@
                                 @endphp
                             </span>
                         </div>
-                        <!-- Changed rounded-lg to rounded-full for circle avatar -->
                         <div class="w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs border-2 border-slate-200 dark:border-[#1e2536]">
                             {{ $roleAcronym }}
                         </div>
@@ -192,13 +193,15 @@
         document.addEventListener('DOMContentLoaded', function () {
             const root = document.documentElement;
 
-            function isDesktop() {
-                return window.innerWidth >= 1024;
-            }
-
+            // Clean unified click handler for sidebar toggle buttons to avoid double-trigger conflicts
             document.querySelectorAll('[data-sidebar-toggle]').forEach(function (btn) {
-                btn.addEventListener('click', function () {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
                     root.classList.toggle('sidebar-open');
+                    const isOpen = root.classList.contains('sidebar-open');
+                    try {
+                        localStorage.setItem('sidebarState', isOpen ? 'open' : 'collapsed');
+                    } catch (err) {}
                 });
             });
 
@@ -206,6 +209,7 @@
             if (overlay) {
                 overlay.addEventListener('click', function () {
                     root.classList.remove('sidebar-open');
+                    try { localStorage.setItem('sidebarState', 'collapsed'); } catch (err) {}
                 });
             }
 
@@ -222,15 +226,6 @@
                     }
                 });
             }
-
-            let wasDesktop = isDesktop();
-            window.addEventListener('resize', function () {
-                const nowDesktop = isDesktop();
-                if (nowDesktop !== wasDesktop) {
-                    root.classList.toggle('sidebar-open', nowDesktop);
-                    wasDesktop = nowDesktop;
-                }
-            });
 
             requestAnimationFrame(function () {
                 root.classList.add('sidebar-ready');
@@ -271,4 +266,4 @@
 
     @stack('scripts')
 </body>
-</html> 
+</html>
