@@ -71,14 +71,17 @@
                     <tbody class="divide-y divide-gray-100 dark:divide-[#1e2536]">
                         @forelse ($categories as $category)
                             <tr class="hover:bg-gray-50 dark:hover:bg-[#1e2536]/40 transition-colors align-top">
-                                <td class="px-8 py-4 space-y-2">
+                                <!-- Entire cell area clickable to go to subcategories -->
+                                <td class="px-8 py-4 space-y-2 cursor-pointer hover:bg-gray-100/60 dark:hover:bg-[#1e2536]/60 transition-colors" onclick="window.location='{{ route('admin.categories.show', $category) }}'">
                                     <div class="flex items-center gap-2">
-                                        <span class="font-bold text-gray-900 dark:text-white uppercase tracking-wider">{{ $category->name }}</span>
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 border border-gray-200 dark:border-slate-700">MAIN CATEGORY</span>
+                                        <span class="font-bold text-gray-900 dark:text-white uppercase tracking-wider hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                            {{ $category->name }}
+                                        </span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">MAIN CATEGORY</span>
                                     </div>
 
                                     @if($category->children->count() > 0)
-                                        <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                                        <div class="flex flex-wrap items-center gap-1.5 pt-1" onclick="event.stopPropagation()">
                                             <span class="text-xs font-semibold text-gray-400 dark:text-slate-500 mr-1">BRANDS:</span>
                                             @foreach($category->children as $child)
                                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-50 dark:bg-[#161B26] border border-gray-200 dark:border-[#1e2536] text-gray-700 dark:text-slate-300 shadow-2xs">
@@ -101,7 +104,7 @@
                                     </span>
                                 </td>
                                 <td class="px-8 py-4 text-gray-600 dark:text-slate-400 font-semibold">
-                                    {{ $category->products()->count() }}
+                                    {{ $category->products->count() + $category->children->sum(fn($child) => $child->products->count()) }}
                                 </td>
                                 <td class="px-8 py-4">
                                     <span class="inline-block bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-emerald-200 dark:border-emerald-900">
@@ -121,10 +124,13 @@
                                             Edit
                                         </button>
                                         <!-- Delete Button -->
-                                        <button type="button" onclick="toggleDeleteModal({{ $category->id }}, true)" 
-                                                class="bg-white border-2 border-rose-600 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-rose-600/80 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
-                                            Delete
-                                        </button>
+                                        <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="inline-block" onsubmit="return confirm('Delete this category?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="bg-white border-2 border-rose-600 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-rose-600/80 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
+                                                Delete
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -138,24 +144,30 @@
             {{-- ================= GRID VIEW ================= --}}
             <div class="view-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6 justify-items-center sm:justify-items-stretch">
                 @forelse ($categories as $category)
-                    <div class="w-full border-2 border-gray-200 dark:border-[#1e2536] rounded-2xl overflow-hidden bg-white dark:bg-[#161B26] flex flex-col shadow-xs p-5 justify-between">
+                    <!-- Entire card clickable -->
+                    <div class="w-full border-2 border-gray-200 dark:border-[#1e2536] rounded-2xl overflow-hidden bg-white dark:bg-[#161B26] flex flex-col shadow-xs p-5 justify-between cursor-pointer hover:border-blue-500/50 transition-all" onclick="window.location='{{ route('admin.categories.show', $category) }}'">
                         <div>
                             <div class="flex items-center justify-between gap-2 mb-2">
-                                <p class="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider">{{ $category->name }}</p>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 border border-gray-200 dark:border-slate-700">MAIN</span>
+                                <span class="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider">
+                                    {{ $category->name }}
+                                </span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900">MAIN</span>
                             </div>
 
                             <p class="text-xs text-gray-400 dark:text-slate-400 font-mono mb-2">Code: {{ $category->code ?? '—' }}</p>
                             
-                            <div class="mb-4">
+                            <div class="mb-4 flex items-center justify-between">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold
                                     {{ $category->type === 'service' ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900' : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700' }}">
                                     {{ ucfirst($category->type) }}
                                 </span>
+                                <span class="text-xs font-semibold text-gray-500 dark:text-slate-400">
+                                    Products: {{ $category->products->count() + $category->children->sum(fn($child) => $child->products->count()) }}
+                                </span>
                             </div>
 
                             @if($category->children->count() > 0)
-                                <div class="flex flex-wrap items-center gap-1 mb-4">
+                                <div class="flex flex-wrap items-center gap-1 mb-4" onclick="event.stopPropagation()">
                                     <span class="text-[11px] font-semibold text-gray-400 dark:text-slate-500 mr-1">BRANDS:</span>
                                     @foreach($category->children as $child)
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-50 dark:bg-[#10141D] border border-gray-200 dark:border-[#1e2536] text-gray-700 dark:text-slate-300">
@@ -167,7 +179,7 @@
                         </div>
 
                         <!-- Grid Card Action Buttons -->
-                        <div class="pt-3 border-t-2 border-gray-100 dark:border-[#1e2536] flex items-center gap-1.5">
+                        <div class="pt-3 border-t-2 border-gray-100 dark:border-[#1e2536] flex items-center gap-1.5" onclick="event.stopPropagation()">
                             <button type="button" onclick="toggleAddBrandModal({{ $category->id }}, true)"
                                class="bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-[10px] font-semibold px-2 py-1.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer text-center">
                                 + Brand
@@ -176,10 +188,13 @@
                                class="flex-1 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-700 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-[#1e2536] dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white text-[10px] font-semibold px-2 py-1.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer text-center">
                                 Edit
                             </button>
-                            <button type="button" onclick="toggleDeleteModal({{ $category->id }}, true)"
-                               class="flex-1 bg-white border-2 border-rose-600 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-rose-600/80 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white text-[10px] font-semibold px-2 py-1.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer text-center">
-                                Delete
-                            </button>
+                            <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="flex-1 inline-block" onsubmit="return confirm('Delete this category?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="w-full bg-white border-2 border-rose-600 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-rose-600/80 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white text-[10px] font-semibold px-2 py-1.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer text-center">
+                                    Delete
+                                </button>
+                            </form>
                         </div>
                     </div>
                 @empty
@@ -314,38 +329,6 @@
                 </div>
             @endforeach
 
-            {{-- ================= RENDER CUSTOM DELETE CONFIRMATION MODALS FOR ALL CATEGORIES ================= --}}
-            @foreach ($categories as $category)
-                <div id="deleteModal-{{ $category->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
-                    <div class="relative w-full max-w-md bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-2xl p-8 transform transition-all text-left" onclick="event.stopPropagation()">
-                        
-                        <div class="flex items-center justify-between pb-4 mb-6 border-b-2 border-gray-200 dark:border-[#1e2536]">
-                            <h3 class="text-xl font-bold text-gray-900 dark:text-white">Delete Category</h3>
-                            <button type="button" onclick="toggleDeleteModal({{ $category->id }}, false)" class="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-[#161B26] transition-colors text-xl font-bold">
-                                &times;
-                            </button>
-                        </div>
-
-                        <p class="text-sm text-gray-600 dark:text-slate-300 mb-6 font-medium">
-                            Are you sure you want to delete <strong class="text-gray-900 dark:text-white">{{ $category->name }}</strong>? This action cannot be undone.
-                        </p>
-
-                        <div class="flex items-center justify-end space-x-3 pt-6 border-t-2 border-gray-200 dark:border-[#1e2536]">
-                            <button type="button" onclick="toggleDeleteModal({{ $category->id }}, false)" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-[#161B26] transition-colors cursor-pointer">
-                                Cancel
-                            </button>
-                            <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" class="inline-block">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="bg-white border-2 border-rose-600 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-[#10141D] dark:border-2 dark:border-rose-600/80 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-all duration-300 ease-in-out shadow-xs cursor-pointer">
-                                    Delete Category
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-
             <!-- Custom Pill Pagination Footer -->
             @if ($categories->hasPages())
                 <div class="px-8 py-5 border-t-2 border-gray-200 dark:border-[#1e2536] flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-slate-400">
@@ -464,7 +447,7 @@
         </div>
     </div>
 
-    <!-- Add Product Modal Popup matching reference image -->
+    <!-- Add Product Modal Popup -->
     <div id="addProductModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="relative w-full max-w-3xl bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-2xl p-8 transform transition-all text-left">
             
@@ -481,7 +464,6 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Name</label>
-                        <!-- Fixed field name mapping to product_name -->
                         <input type="text" name="product_name" required placeholder="e.g. Purified Drinking Water"
                                class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                     </div>
@@ -557,11 +539,17 @@
                 </div>
 
                 <div>
+                    <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Description <span class="text-gray-400 font-normal">(Optional)</span></label>
+                    <textarea name="product_description" rows="3" placeholder="Enter product details or description..."
+                              class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400"></textarea>
+                </div>
+
+                <div>
                     <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Image <span class="text-gray-400 font-normal">(Optional)</span></label>
                     <div class="flex items-center gap-4">
                         <label class="bg-gray-100 hover:bg-gray-200 dark:bg-[#161B26] dark:hover:bg-[#1e2536] text-gray-700 dark:text-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl cursor-pointer border-2 border-gray-200 dark:border-[#1e2536] transition-colors">
                             Choose File
-                            <input type="file" name="product_image" class="hidden" onchange="document.getElementById('fileNameLabel').textContent = this.files[0] ? this.files[0].name : 'No file chosen'">
+                            <input type="file" name="product_image" accept="image/*" class="hidden" onchange="document.getElementById('fileNameLabel').textContent = this.files[0] ? this.files[0].name : 'No file chosen'">
                         </label>
                         <span id="fileNameLabel" class="text-sm text-gray-500 dark:text-slate-400">No file chosen</span>
                     </div>
@@ -618,17 +606,6 @@
 
     function toggleEditCategoryModal(categoryId, show) {
         const modal = document.getElementById(`editCategoryModal-${categoryId}`);
-        if (show) {
-            modal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-        } else {
-            modal.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        }
-    }
-
-    function toggleDeleteModal(categoryId, show) {
-        const modal = document.getElementById(`deleteModal-${categoryId}`);
         if (show) {
             modal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');

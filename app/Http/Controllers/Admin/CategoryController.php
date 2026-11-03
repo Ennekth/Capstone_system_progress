@@ -12,7 +12,7 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Category::whereNull('parent_id')->with(['children', 'products']);
+        $query = Category::whereNull('parent_id')->with(['children.products', 'products']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -43,9 +43,40 @@ class CategoryController extends Controller
         ]);
     }
 
+    public function show(Category $category)
+    {
+        $category->load(['children.products', 'products']);
+        
+        return view('admin.categories.show', compact('category'));
+    }
+
+    public function showSubcategoryDetail(Request $request, Category $category)
+    {
+        $productQuery = $category->products();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $productQuery->where(function($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%")
+                  ->orWhere('approx_volume', 'like', "%{$search}%");
+            });
+        }
+
+        $products = $productQuery->orderBy('product_name')->paginate(10)->withQueryString();
+        $parentCategory = $category->parent;
+        $mainCategories = Category::whereNull('parent_id')->orderBy('name')->get();
+
+        return view('admin.categories.subcategory-detail', [
+            'subcategory' => $category,
+            'parentCategory' => $parentCategory,
+            'products' => $products,
+            'mainCategories' => $mainCategories
+        ]);
+    }
+
     private function generateUniqueCode($name)
     {
-        // Generate a clean slug/acronym from name (e.g. "Water Filters" -> "WATER-FILTERS" or "WF")
         $baseCode = strtoupper(Str::slug($name, ''));
         if (strlen($baseCode) > 6) {
             $baseCode = substr($baseCode, 0, 6);
@@ -74,7 +105,6 @@ class CategoryController extends Controller
             'description' => ['nullable', 'string'],
         ]);
 
-        mw:
         $parentId = $data['parent_id'] ?? null;
 
         $exists = Category::where('parent_id', $parentId)
@@ -133,7 +163,6 @@ class CategoryController extends Controller
             'description' => ['nullable', 'string'],
         ]);
 
-        // Keep existing code or regenerate if name changed significantly
         $category->update($data);
 
         return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully.');

@@ -1,8 +1,7 @@
-<?5?>
 <?php
 
-use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -39,8 +38,6 @@ Route::middleware('auth')->group(function () {
         Route::delete('/forecast/settings/{forecastSetting}', [ForecastSettingController::class, 'destroyOverride'])->name('forecast.settings.destroy');
 
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
-        
-        // Added Audit Log Details Route for the modal fetch request
         Route::get('/audit-logs/{id}', [AuditLogController::class, 'show'])->name('audit-logs.show');
     });
 
@@ -70,8 +67,11 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin,manager')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('products', ProductController::class)->except(['show']);
         Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+        Route::get('/categories/{category}', [CategoryController::class, 'show'])->name('categories.show');
+        // Added Subcategory Product Detail Route
+        Route::get('/categories/subcategories/{category}', [CategoryController::class, 'showSubcategoryDetail'])->name('categories.subcategories.show');
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
-        Route::post('/categories/{category}/subcategories', [CategoryController::class, 'storeSubcategory'])->name('categories.subcategories.store'); // Added Subcategory Store Route
+        Route::post('/categories/{category}/subcategories', [CategoryController::class, 'storeSubcategory'])->name('categories.subcategories.store');
         Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update'); 
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     });

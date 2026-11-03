@@ -62,35 +62,61 @@
                 <span class="sidebar-text">Point of Sale</span>
             </a>
 
-            <!-- Transaction History -->
-            <a href="{{ route('transaction.history') }}" title="Transaction History"
-               class="{{ $linkBase }} {{ request()->routeIs('transaction.history') ? $linkActive : $linkIdle }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                <span class="sidebar-text">Transaction History</span>
-            </a>
+            <!-- Sales & Transactions Dropdown -->
+            @php
+                $isSalesActive = request()->routeIs('sales.*', 'transaction.history');
+            @endphp
+            <div class="space-y-1">
+                <button type="button" onclick="toggleDropdown('salesDropdown', 'salesArrow')"
+                        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="sidebar-text">Sales & Transactions</span>
+                    </div>
+                    <svg id="salesArrow" class="w-4 h-4 transition-transform duration-200 dropdown-arrow {{ $isSalesActive ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+
+                <div id="salesDropdown" class="{{ $isSalesActive ? '' : 'hidden' }} pl-6 space-y-1">
+                    @if (in_array(auth()->user()->role, ['admin', 'manager']))
+                        <a href="{{ route('sales.records') }}" title="Sales Records"
+                           class="{{ $linkBase }} {{ request()->routeIs('sales.*') ? $linkActive : $linkIdle }}">
+                            <span class="sidebar-text">Sales Records</span>
+                        </a>
+                    @endif
+                    <a href="{{ route('transaction.history') }}" title="Transaction History"
+                       class="{{ $linkBase }} {{ request()->routeIs('transaction.history') ? $linkActive : $linkIdle }}">
+                        <span class="sidebar-text">Transaction History</span>
+                    </a>
+                </div>
+            </div>
         @endif
 
         @if (in_array(auth()->user()->role, ['admin', 'manager']))
-            <!-- Sales Records (Admin & Manager only) -->
-            <a href="{{ route('sales.records') }}" title="Sales Records"
-               class="{{ $linkBase }} {{ request()->routeIs('sales.*') ? $linkActive : $linkIdle }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span class="sidebar-text">Sales Records</span>
-            </a>
+            <!-- Catalog Management Dropdown (Products & Categories) -->
+            @php
+                $isCatalogActive = request()->routeIs('admin.products.*', 'admin.categories.*');
+            @endphp
+            <div class="space-y-1">
+                <button type="button" onclick="toggleDropdown('catalogDropdown', 'catalogArrow')"
+                        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-slate-300 dark:hover:bg-[#161B26] dark:hover:text-white cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                        <span class="sidebar-text">Catalog Management</span>
+                    </div>
+                    <svg id="catalogArrow" class="w-4 h-4 transition-transform duration-200 dropdown-arrow {{ $isCatalogActive ? 'rotate-180' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
 
-            <!-- Product Management -->
-            <a href="{{ route('admin.products.index') }}" title="Product Management"
-               class="{{ $linkBase }} {{ request()->routeIs('admin.products.*') ? $linkActive : $linkIdle }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                <span class="sidebar-text">Product Management</span>
-            </a>
-
-            <!-- Categories -->
-            <a href="{{ route('admin.categories.index') }}" title="Categories"
-               class="{{ $linkBase }} {{ request()->routeIs('admin.categories.*') ? $linkActive : $linkIdle }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
-                <span class="sidebar-text">Categories</span>
-            </a>
+                <div id="catalogDropdown" class="{{ $isCatalogActive ? '' : 'hidden' }} pl-6 space-y-1">
+                    <a href="{{ route('admin.products.index') }}" title="Product Management"
+                       class="{{ $linkBase }} {{ request()->routeIs('admin.products.*') ? $linkActive : $linkIdle }}">
+                        <span class="sidebar-text">Products</span>
+                    </a>
+                    <a href="{{ route('admin.categories.index') }}" title="Categories"
+                       class="{{ $linkBase }} {{ request()->routeIs('admin.categories.*') ? $linkActive : $linkIdle }}">
+                        <span class="sidebar-text">Categories</span>
+                    </a>
+                </div>
+            </div>
 
             <!-- Forecasting & EOQ Dropdown -->
             @php
@@ -166,15 +192,6 @@
             </a>
         @endif
 
-        @if (auth()->user()->role === 'admin')
-            <!-- User Management -->
-            <a href="{{ route('admin.users.index') }}" title="User Management"
-               class="{{ $linkBase }} {{ request()->routeIs('admin.users.*') ? $linkActive : $linkIdle }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <span class="sidebar-text">User Management</span>
-            </a>
-        @endif
-
         @if (auth()->user()->role === 'warehouse_staff')
             <a href="{{ route('inventory.view') }}" title="Inventory Management"
                class="{{ $linkBase }} {{ request()->routeIs('inventory.view') ? $linkActive : $linkIdle }}">
@@ -188,6 +205,15 @@
                class="{{ $linkBase }} {{ request()->routeIs('inventory.myRequests') ? $linkActive : $linkIdle }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <span class="sidebar-text">My Restock Requests</span>
+            </a>
+        @endif
+
+        @if (auth()->user()->role === 'admin')
+            <!-- User Management -->
+            <a href="{{ route('admin.users.index') }}" title="User Management"
+               class="{{ $linkBase }} {{ request()->routeIs('admin.users.*') ? $linkActive : $linkIdle }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span class="sidebar-text">User Management</span>
             </a>
         @endif
 
