@@ -64,15 +64,16 @@
                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
                                   focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
                 </div>
-                {{-- Di pa sure which one to use --}}
-                <div>
-                    <label for="volume_liters" class="block text-sm font-medium text-gray-700 mb-1">
-                        Volume (liters) <span class="text-gray-400">(optional — used for holding cost calculation)</span>
-                    </label>
-                    <input type="number" step="0.01" min="0" name="volume_liters" id="volume_liters"
-                        value="{{ old('volume_liters') }}"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                </div>
+            </div>
+
+            <div>
+                <label for="volume_liters" class="block text-sm font-medium text-gray-700 mb-1">
+                    Volume (liters) <span class="text-gray-400">(optional — used for holding cost calculation)</span>
+                </label>
+                <input type="number" step="0.01" min="0" name="volume_liters" id="volume_liters"
+                    value="{{ old('volume_liters') }}"
+                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -102,7 +103,8 @@
                     </label>
                     <input type="number" min="0" name="store_quantity" id="store_quantity"
                         value="{{ old('store_quantity', 0) }}"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
                 </div>
 
                 <div>
@@ -111,19 +113,19 @@
                     </label>
                     <input type="number" min="0" name="warehouse_quantity" id="warehouse_quantity"
                         value="{{ old('warehouse_quantity', 0) }}"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
                 </div>
             </div>
 
-                <div>
-                    <label for="reorder_point" class="block text-sm font-medium text-gray-700 mb-1">
-                        Reorder Point <span class="text-gray-400">(optional)</span>
-                    </label>
-                    <input type="number" min="0" name="reorder_point" id="reorder_point" value="{{ old('reorder_point') }}"
-                           placeholder="e.g. 10"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
-                </div>
+            <div>
+                <label for="reorder_point" class="block text-sm font-medium text-gray-700 mb-1">
+                    Reorder Point <span class="text-gray-400">(optional)</span>
+                </label>
+                <input type="number" min="0" name="reorder_point" id="reorder_point" value="{{ old('reorder_point') }}"
+                       placeholder="e.g. 10"
+                       class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                              focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800">
             </div>
 
             <div>

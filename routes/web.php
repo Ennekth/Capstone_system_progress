@@ -1,3 +1,4 @@
+<?5?>
 <?php
 
 use App\Http\Controllers\UserController;
@@ -70,6 +71,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('products', ProductController::class)->except(['show']);
         Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+        Route::post('/categories/{category}/subcategories', [CategoryController::class, 'storeSubcategory'])->name('categories.subcategories.store'); // Added Subcategory Store Route
+        Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update'); 
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     });
 
