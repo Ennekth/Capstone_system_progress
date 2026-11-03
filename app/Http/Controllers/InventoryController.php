@@ -21,6 +21,7 @@ class InventoryController extends Controller
                 foreach ($searchTerms as $term) {
                     $q->where(function ($subQuery) use ($term) {
                         $subQuery->where('product_name', 'like', '%' . $term . '%')
+                                 ->orWhere('code', 'like', '%' . $term . '%')
                                  ->orWhereHas('category', function ($catQuery) use ($term) {
                                      $catQuery->where('name', 'like', '%' . $term . '%');
                                  });
@@ -51,12 +52,11 @@ class InventoryController extends Controller
 
         $sort = $request->get('sort', 'product_name');
         $direction = $request->get('direction', 'asc');
-        $allowedSorts = ['product_name', 'store_quantity', 'warehouse_quantity', 'selling_price', 'created_at'];
+        $allowedSorts = ['product_name', 'code', 'store_quantity', 'warehouse_quantity', 'selling_price', 'created_at'];
         if (!in_array($sort, $allowedSorts)) {
             $sort = 'product_name';
         }
 
-        // Standardized to 16 items per page
         $products = $query->orderBy($sort, $direction === 'desc' ? 'desc' : 'asc')
             ->paginate(16)
             ->withQueryString();
@@ -136,18 +136,20 @@ class InventoryController extends Controller
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 
+        if ($data['direction'] === 'to_store' && $product->warehouse_quantity < $data['quantity']) {
+            return back()->with('error', 'Not enough warehouse stock to transfer. Available warehouse quantity: ' . $product->warehouse_quantity);
+        }
+
+        if ($data['direction'] === 'to_warehouse' && $product->store_quantity < $data['quantity']) {
+            return back()->with('error', 'Not enough store stock to transfer. Available store quantity: ' . $product->store_quantity);
+        }
+
         DB::transaction(function () use ($product, $data, $user) {
             if ($data['direction'] === 'to_store') {
-                if ($product->warehouse_quantity < $data['quantity']) {
-                    abort(422, 'Not enough warehouse stock to transfer.');
-                }
                 $product->decrement('warehouse_quantity', $data['quantity']);
                 $product->increment('store_quantity', $data['quantity']);
                 $type = 'transfer_to_store';
             } else {
-                if ($product->store_quantity < $data['quantity']) {
-                    abort(422, 'Not enough store stock to transfer.');
-                }
                 $product->decrement('store_quantity', $data['quantity']);
                 $product->increment('warehouse_quantity', $data['quantity']);
                 $type = 'transfer_to_warehouse';
@@ -169,9 +171,7 @@ class InventoryController extends Controller
         return back()->with('success', 'Stock transferred successfully.');
     }
 
-    // ==================== APPROVALS (admin/manager only) ====================
-
-   public function pendingApprovals()
+    public function pendingApprovals()
     {
         $pending = StockMovement::with(['product', 'requester'])
             ->where('status', 'pending')
@@ -187,7 +187,6 @@ class InventoryController extends Controller
             return back()->with('error', 'This request has already been processed.');
         }
 
-        // Approval sets status to approved and delivery status to in_transit without updating inventory quantities yet
         $movement->update([
             'status' => 'approved',
             'delivery_status' => 'in_transit',
@@ -200,7 +199,6 @@ class InventoryController extends Controller
 
     public function fulfill(StockMovement $movement)
     {
-        // Allow fulfillment if delivery status is in_transit OR request status is approved
         if ($movement->delivery_status !== 'in_transit' && $movement->status !== 'approved') {
             return back()->with('error', 'Only in-transit or approved requests can be received.');
         }
@@ -210,11 +208,9 @@ class InventoryController extends Controller
             $column = str_contains($movement->type, 'warehouse') ? 'warehouse_quantity' : 'store_quantity';
 
             $before = $product->$column;
-            // Increment the product stock
             $product->increment($column, $movement->quantity);
             $after = $before + $movement->quantity;
 
-            // Use direct property assignment to bypass any fillable array restrictions
             $movement->delivery_status = 'received';
             $movement->quantity_before = $before;
             $movement->quantity_after = $after;
@@ -224,7 +220,7 @@ class InventoryController extends Controller
         return back()->with('success', 'Restock marked as received and stock updated successfully.');
     }
 
-   public function reject(Request $request, StockMovement $movement)
+    public function reject(Request $request, StockMovement $movement)
     {
         if ($movement->status !== 'pending') {
             return back()->with('error', 'This request has already been processed.');
@@ -234,7 +230,6 @@ class InventoryController extends Controller
             'rejection_reason' => ['required', 'string', 'max:500'],
         ]);
 
-        // Automatically set delivery_status to 'not_approved' when rejected
         $movement->status = 'rejected';
         $movement->delivery_status = 'not_approved';
         $movement->approved_by = Auth::id();
@@ -244,8 +239,6 @@ class InventoryController extends Controller
 
         return back()->with('success', 'Restock request rejected.');
     }
-
-    // ==================== LOGS ====================
 
     public function logs(Request $request)
     {
@@ -259,7 +252,6 @@ class InventoryController extends Controller
         }
 
         $movements = $query->orderBy('created_at', 'desc')->get();
-
         $grouped = $movements->groupBy(fn($m) => $m->batch_id ?? 'single-' . $m->id);
 
         $page = $request->get('page', 1);
@@ -278,7 +270,6 @@ class InventoryController extends Controller
         return view('inventory.stockLogs', compact('grouped', 'categories'));
     }
 
-    // ==================== Staff REQUESTS ====================
     public function myRequests(Request $request)
     {
         $query = StockMovement::with(['product', 'approver'])
@@ -388,6 +379,7 @@ class InventoryController extends Controller
             'name' => $product->product_name,
             'description' => $product->product_description ?: 'No description provided.',
             'category' => $product->category->name ?? '—',
+            'code' => $product->code ?? '—',
             'approx_volume' => $product->approx_volume ?: '—',
             'purchase_cost' => $product->purchase_cost !== null ? number_format($product->purchase_cost, 2) : '—',
             'selling_price' => $product->selling_price !== null ? number_format($product->selling_price, 2) : '—',

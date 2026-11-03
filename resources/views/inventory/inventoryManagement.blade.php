@@ -10,6 +10,18 @@
 
     <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Inventory Management</h1>
 
+    @if (session('error'))
+        <div class="mb-6 rounded-2xl bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-rose-300 border-2 border-red-200 dark:border-rose-900 px-6 py-4 text-sm font-medium">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="mb-6 rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-2 border-emerald-200 dark:border-emerald-900 px-6 py-4 text-sm font-medium">
+            {{ session('success') }}
+        </div>
+    @endif
+
     <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-sm overflow-hidden mb-8">
 
         <div class="px-8 py-6 border-b-2 border-gray-200 dark:border-[#1e2536]">
@@ -29,7 +41,7 @@
             </div>
 
             <form id="filterForm" method="GET" class="flex flex-col sm:flex-row flex-wrap gap-3 pt-6">
-                <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="Search products..."
+                <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="Search products or SKU..."
                        class="flex-1 min-w-[180px] rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-2.5 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500
                               focus:outline-none focus:border-slate-400">
 
@@ -50,6 +62,7 @@
 
                 <select name="sort" onchange="this.form.submit()" class="rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400 cursor-pointer">
                     <option value="product_name" {{ request('sort', 'product_name') === 'product_name' ? 'selected' : '' }}>Sort: Name</option>
+                    <option value="code" {{ request('sort') === 'code' ? 'selected' : '' }}>Sort: SKU / Code</option>
                     <option value="store_quantity" {{ request('sort') === 'store_quantity' ? 'selected' : '' }}>Sort: Store Qty</option>
                     <option value="warehouse_quantity" {{ request('sort') === 'warehouse_quantity' ? 'selected' : '' }}>Sort: Warehouse Qty</option>
                     <option value="selling_price" {{ request('sort') === 'selling_price' ? 'selected' : '' }}>Sort: Price</option>
@@ -75,6 +88,7 @@
                 <thead class="bg-gray-50 dark:bg-[#161B26] text-gray-600 dark:text-slate-400 uppercase text-xs border-b-2 border-gray-200 dark:border-[#1e2536]">
                     <tr>
                         <th class="px-8 py-4">Product</th>
+                        <th class="px-8 py-4">SKU / Code</th>
                         <th class="px-8 py-4">Category</th>
                         <th class="px-8 py-4">Cost</th>
                         <th class="px-8 py-4">Price</th>
@@ -106,6 +120,7 @@
                                     <div class="text-xs text-gray-400 mt-0.5">{{ $product->approx_volume }}</div>
                                 @endif
                             </td>
+                            <td class="px-8 py-4 text-gray-600 dark:text-slate-400 font-mono text-xs">{{ $product->code ?? '—' }}</td>
                             <td class="px-8 py-4 text-gray-600 dark:text-slate-400 font-medium">{{ $product->category->name ?? '—' }}</td>
                             <td class="px-8 py-4 text-gray-600 dark:text-slate-400 font-semibold">
                                 ₱{{ $product->purchase_cost !== null ? number_format($product->purchase_cost, 2) : '—' }}
@@ -166,20 +181,20 @@
                         </tr>
 
                         <tr id="restock-{{ $product->id }}" class="hidden bg-gray-50 dark:bg-[#161B26]/80">
-                            <td colspan="10" class="px-8 py-6 border-t-2 border-gray-200 dark:border-[#1e2536]">
+                            <td colspan="11" class="px-8 py-6 border-t-2 border-gray-200 dark:border-[#1e2536]">
                                 @include('partials.restockForm', ['product' => $product])
                             </td>
                         </tr>
 
                         @if ($canTransfer)
                             <tr id="transfer-{{ $product->id }}" class="hidden bg-blue-50/50 dark:bg-blue-950/30">
-                                <td colspan="10" class="px-8 py-6 border-t-2 border-gray-200 dark:border-[#1e2536]">
+                                <td colspan="11" class="px-8 py-6 border-t-2 border-gray-200 dark:border-[#1e2536]">
                                     @include('partials.transferForm', ['product' => $product])
                                 </td>
                             </tr>
                         @endif
                     @empty
-                        <tr><td colspan="10" class="px-8 py-12 text-center text-gray-400 dark:text-slate-500 font-medium">No products found.</td></tr>
+                        <tr><td colspan="11" class="px-8 py-12 text-center text-gray-400 dark:text-slate-500 font-medium">No products found.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -204,6 +219,7 @@
 
                         <div class="p-3">
                             <p class="font-bold text-gray-900 dark:text-white text-xs line-clamp-1">{{ $product->product_name }}</p>
+                            <p class="text-[11px] font-mono text-gray-400 dark:text-slate-500 mt-0.5">{{ $product->code ?? '—' }}</p>
                             <p class="text-[11px] text-gray-400 dark:text-slate-400 mt-0.5 truncate">{{ $product->category->name ?? '—' }}</p>
                             <p class="text-[11px] text-gray-500 dark:text-slate-400 mt-1 font-medium">
                                 Store {{ $product->store_quantity ?? 0 }} · WH {{ $product->warehouse_quantity ?? 0 }}
