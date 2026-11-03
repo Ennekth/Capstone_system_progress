@@ -18,12 +18,26 @@
             <form method="GET" action="{{ route('inventory.logs') }}" class="flex items-center gap-3 w-full sm:w-auto">
                 <select name="category_id" onchange="this.form.submit()"
                         class="w-full sm:w-64 rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 cursor-pointer">
-                    <option value="">All Categories</option>
-                    @foreach ($categories as $category)
-                        <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
-                            {{ $category->name }}
-                        </option>
-                    @endforeach
+                    <option value="">All Categories (Default)</option>
+                    
+                    {{-- Render grouped categories if available, else flat --}}
+                    @if(isset($categoryGroups))
+                        @foreach ($categoryGroups as $groupName => $groupCategories)
+                            <optgroup label="{{ strtoupper($groupName) }}">
+                                @foreach ($groupCategories as $cat)
+                                    <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
+                                        &nbsp;&nbsp;&mdash; {{ $cat->name }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    @else
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    @endif
                 </select>
                 @if (request('category_id'))
                     <a href="{{ route('inventory.logs') }}" class="text-xs font-semibold text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-white whitespace-nowrap">Reset</a>
@@ -52,7 +66,6 @@
                                 </p>
                                 <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{{ $first->created_at->format('M d, Y - h:i A') }}</p>
                             </div>
-                            <!-- Status Badge -->
                             <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$first->status] ?? 'bg-gray-100 text-gray-700' }}">
                                 {{ ucfirst($first->status) }}
                             </span>
@@ -70,7 +83,7 @@
                                     <th class="px-6 py-3">Product</th>
                                     <th class="px-6 py-3">Category</th>
                                     <th class="px-6 py-3">Previous Qty</th>
-                                    <th class="px-6 py-3">Requested / Added</th>
+                                    <th class="px-6 py-3">Added / Changed</th>
                                     <th class="px-6 py-3">New Qty</th>
                                 </tr>
                             </thead>
@@ -84,13 +97,8 @@
                                             {{ $movement->product->category->name ?? '—' }}
                                         </td>
                                         <td class="px-6 py-3.5 text-gray-600 dark:text-slate-400">{{ $movement->quantity_before ?? '—' }}</td>
-                                        <td class="px-6 py-3.5 {{ $movement->status === 'approved' ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-amber-600 dark:text-amber-400 font-medium' }}">
-                                            {{ $movement->status === 'approved' ? '+' : '' }}{{ $movement->quantity }} 
-                                            @if($movement->status !== 'approved')
-                                                <span class="text-[10px] text-gray-400">({{ ucfirst($movement->status) }})</span>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-3.5 text-gray-900 dark:text-white font-bold">{{ $movement->quantity_after ?? 'Unchanged' }}</td>
+                                        <td class="px-6 py-3.5 text-emerald-600 dark:text-emerald-400 font-semibold">+{{ $movement->quantity }}</td>
+                                        <td class="px-6 py-3.5 text-gray-900 dark:text-white font-bold">{{ $movement->quantity_after ?? '—' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -102,12 +110,6 @@
                             <span class="font-bold uppercase tracking-wider text-gray-400">Note:</span> {{ $first->note }}
                         </div>
                     @endif
-
-                    @if ($first->rejection_reason && $first->status === 'rejected')
-                        <div class="px-6 py-3.5 text-xs text-rose-500 dark:text-rose-400 border-t border-gray-200 dark:border-[#1e2536] bg-rose-50/50 dark:bg-rose-950/20">
-                            <span class="font-bold uppercase tracking-wider text-rose-400">Rejection Reason:</span> {{ $first->rejection_reason }}
-                        </div>
-                    @endif
                 </div>
             @empty
                 <div class="py-12 text-center text-gray-400 dark:text-slate-500 font-medium">
@@ -117,7 +119,7 @@
         </div>
 
         <!-- Custom Pill Pagination Footer -->
-        @if (isset($grouped) && method_exists($grouped, 'hasPages') && $grouped->hasPages())
+        @if ($grouped->hasPages())
             <div class="px-8 py-5 border-t-2 border-gray-200 dark:border-[#1e2536] flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-slate-400">
                 <div>
                     Showing <span class="font-semibold text-gray-900 dark:text-white">{{ $grouped->firstItem() ?? 0 }}</span> to <span class="font-semibold text-gray-900 dark:text-white">{{ $grouped->lastItem() ?? 0 }}</span> of <span class="font-semibold text-gray-900 dark:text-white">{{ $grouped->total() }}</span> results
