@@ -38,6 +38,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/forecast/settings/{forecastSetting}', [ForecastSettingController::class, 'destroyOverride'])->name('forecast.settings.destroy');
 
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+        
+        // Added Audit Log Details Route for the modal fetch request
+        Route::get('/audit-logs/{id}', [AuditLogController::class, 'show'])->name('audit-logs.show');
     });
 
     // Admin + Manager: full inventory, approvals, logs, and sales records
