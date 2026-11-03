@@ -14,6 +14,7 @@ use App\Http\Controllers\EoqSettingController;
 use App\Http\Controllers\EoqCalibrationController;
 use App\Http\Controllers\RestockBatchController;
 use App\Http\Controllers\ThemeController;
+use App\Http\Controllers\UserGuideController;
 
 // ==================== GUEST ROUTES ====================
 Route::middleware('guest')->group(function () {
@@ -102,6 +103,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/inventory/restock-mode', [RestockBatchController::class, 'index'])->name('inventory.restockBatch');
         Route::post('/inventory/restock-mode', [RestockBatchController::class, 'store'])->name('inventory.restockBatch.store');
     });
+
+    // All Users: User Guide Module
+    Route::get('/user-guide', [UserGuideController::class, 'index'])->name('user-guide');
 
     // Dashboard & Global Utilities
     Route::get('/', [DashboardController::class, 'index'])->name('home');
