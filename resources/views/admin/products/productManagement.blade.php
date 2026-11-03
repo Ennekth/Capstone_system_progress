@@ -6,12 +6,6 @@
 
     <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Product Management</h1>
 
-    @if (session('success'))
-        <div class="mb-6 rounded-2xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950/65 dark:text-emerald-300 border-2 border-emerald-200 dark:border-emerald-900 px-6 py-4 text-sm font-medium">
-            {{ session('success') }}
-        </div>
-    @endif
-
     <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-sm overflow-hidden mb-8">
 
         <!-- Header -->
@@ -390,7 +384,7 @@
 
     </div>
 
-    <!-- Add Product Modal Popup -->
+    <!-- Add Product Modal Popup (Themed to match UI) -->
     <div id="addProductModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
         <div class="relative w-full max-w-2xl bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-2xl p-8 transform transition-all text-left">
             

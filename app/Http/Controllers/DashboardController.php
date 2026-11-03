@@ -53,7 +53,13 @@ class DashboardController extends Controller
 
     private function sharedMetrics(): array
     {
-        $restockNeededCount = Product::whereRaw('(COALESCE(store_quantity, 0) + COALESCE(warehouse_quantity, 0)) <= COALESCE(reorder_point, 10)')->count();
+        $restockNeededCount = Product::where(function($q) {
+            $q->whereRaw('COALESCE(store_quantity, 0) = 0')
+              ->orWhereRaw('COALESCE(store_quantity, 0) <= COALESCE(reorder_point, 10)')
+              ->orWhereRaw('COALESCE(warehouse_quantity, 0) = 0')
+              ->orWhereRaw('COALESCE(warehouse_quantity, 0) <= COALESCE(reorder_point, 10)')
+              ->orWhereRaw('(COALESCE(store_quantity, 0) + COALESCE(warehouse_quantity, 0)) <= COALESCE(reorder_point, 10)');
+        })->count();
 
         return [
             'todaySales' => Transaction::whereDate('created_at', today())->sum('total_amount'),
@@ -72,12 +78,13 @@ class DashboardController extends Controller
         $totalEoq = $products->sum(fn($p) => $eoqService->calculate($p, $forecastService->projectedAnnualDemand($p)));
 
         $lowStockQuery = Product::with('category')->where(function($q) {
-            $q->where('store_quantity', '<=', 0)
-              ->orWhere('warehouse_quantity', '<=', 0)
-              ->orWhere(fn($sub) => $sub->whereColumn('store_quantity', '<=', 'reorder_point')->whereNotNull('reorder_point'));
+            $q->whereRaw('COALESCE(store_quantity, 0) = 0')
+              ->orWhereRaw('COALESCE(store_quantity, 0) <= COALESCE(reorder_point, 10)')
+              ->orWhereRaw('COALESCE(warehouse_quantity, 0) = 0')
+              ->orWhereRaw('COALESCE(warehouse_quantity, 0) <= COALESCE(reorder_point, 10)')
+              ->orWhereRaw('(COALESCE(store_quantity, 0) + COALESCE(warehouse_quantity, 0)) <= COALESCE(reorder_point, 10)');
         })->get();
 
-        // Paginate low stock collection manually (4 per page, page parameter name: 'alert_page')
         $alertPage = $request->get('alert_page', 1);
         $alertPerPage = 4;
         $paginatedAlerts = new LengthAwarePaginator(

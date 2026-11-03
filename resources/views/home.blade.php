@@ -6,7 +6,7 @@
 
     <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Welcome, {{ auth()->user()->firstname }}</h1>
 
-    {{-- Top Summary Cards Grid (Exact Sales Records Sizing: rounded-3xl p-8) --}}
+    {{-- Top Summary Cards Grid --}}
     <div class="grid grid-cols-1 sm:grid-cols-5 gap-6 mb-8">
         <!-- Today's Sales Card -->
         <a href="{{ route('sales.records', ['date_from' => today()->toDateString(), 'date_to' => today()->toDateString()]) }}"
@@ -240,7 +240,7 @@
             </table>
         </div>
 
-        {{-- Demand Forecast Pagination (Conditional: shows only when pages > 1) --}}
+        {{-- Demand Forecast Pagination --}}
         @if ($forecast->hasPages())
             <div class="px-8 py-5 border-t-2 border-gray-200 dark:border-[#1e2536] flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-slate-400">
                 <div>
@@ -329,7 +329,7 @@
             </table>
         </div>
 
-        {{-- EOQ Pagination (Conditional: shows only when pages > 1) --}}
+        {{-- EOQ Pagination --}}
         @if ($eoqSummary->hasPages())
             <div class="px-8 py-5 border-t-2 border-gray-200 dark:border-[#1e2536] flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-slate-400">
                 <div>
@@ -373,13 +373,13 @@
         @endif
     </div>
 
-    {{-- Admin + Manager: Inventory Alerts --}}
+    {{-- Admin + Manager: Inventory Alerts (Store Status / Warehouse Status / Total Status with Stock levels & ROP) --}}
     @if (in_array(auth()->user()->role, ['admin', 'manager']))
         <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-sm mb-8 overflow-hidden">
             <div class="flex items-center justify-between px-8 py-6 border-b-2 border-gray-200 dark:border-[#1e2536]">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white">Inventory Alerts</h2>
-                    <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Combined out-of-stock and low stock items — showing 4 per page</p>
+                    <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">Combined store, warehouse, and total stock tracking — showing 4 per page</p>
                 </div>
                 <span class="bg-slate-100 text-slate-700 dark:bg-[#161B26] dark:text-slate-300 text-xs font-bold px-4 py-2 rounded-xl">
                     {{ $lowStockProducts->total() }} Products
@@ -387,42 +387,78 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left table-fixed">
+                <table class="w-full text-sm text-left">
                     <thead class="bg-gray-50 dark:bg-[#161B26] text-gray-600 dark:text-slate-400 uppercase text-xs border-b-2 border-gray-200 dark:border-[#1e2536]">
                         <tr>
-                            <th class="px-8 py-4 text-left w-1/4">Product Name</th>
-                            <th class="px-8 py-4 text-left w-1/4">Category</th>
-                            <th class="px-8 py-4 text-left w-1/4">Stock Status</th>
-                            <th class="px-8 py-4 text-right w-1/4">Current Stock</th>
+                            <th class="px-6 py-4">Product Name</th>
+                            <th class="px-6 py-4">Category</th>
+                            <th class="px-6 py-4">Store Status</th>
+                            <th class="px-6 py-4">Warehouse Status</th>
+                            <th class="px-6 py-4">Total Status</th>
+                            <th class="px-6 py-4 text-right">Current Stock / ROP</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-[#1e2536]">
                         @forelse ($lowStockProducts as $product)
+                            @php
+                                $storeQty = $product->store_quantity ?? 0;
+                                $whQty = $product->warehouse_quantity ?? 0;
+                                $totalQty = $storeQty + $whQty;
+                                $reorder = $product->reorder_point ?? 10;
+
+                                $storeStatus = $storeQty == 0 ? 'Out of Stock' : ($storeQty <= $reorder ? 'Low Stock' : 'In Stock');
+                                $whStatus = $whQty == 0 ? 'Out of Stock' : ($whQty <= $reorder ? 'Low Stock' : 'In Stock');
+                                $totalStatus = $totalQty == 0 ? 'Out of Stock' : ($totalQty <= $reorder ? 'Low Stock' : 'In Stock');
+                            @endphp
                             <tr class="hover:bg-gray-50 dark:hover:bg-[#1e2536]/40 transition-colors">
-                                <td class="px-8 py-4 font-medium text-gray-900 dark:text-white text-left truncate w-1/4">
+                                <td class="px-6 py-4 font-bold text-gray-900 dark:text-white">
                                     {{ $product->product_name }}
                                 </td>
-                                <td class="px-8 py-4 text-gray-600 dark:text-slate-400 text-left truncate w-1/4">
+                                <td class="px-6 py-4 text-gray-600 dark:text-slate-400">
                                     {{ $product->category->name ?? '—' }}
                                 </td>
-                                <td class="px-8 py-4 text-left w-1/4">
-                                    @if ($product->store_quantity <= 0)
-                                        <span class="inline-block bg-red-100 text-red-700 dark:bg-red-950 dark:text-rose-400 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
-                                            Out of Stock
-                                        </span>
+
+                                <!-- Store Status Badge -->
+                                <td class="px-6 py-4">
+                                    @if ($storeStatus === 'Out of Stock')
+                                        <span class="inline-block bg-red-100 text-red-700 dark:bg-red-950 dark:text-rose-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-red-200 dark:border-rose-900">Out of Stock</span>
+                                    @elseif ($storeStatus === 'Low Stock')
+                                        <span class="inline-block bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-amber-200 dark:border-amber-900">Low Stock</span>
                                     @else
-                                        <span class="inline-block bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider">
-                                            Low Stock
-                                        </span>
+                                        <span class="inline-block bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-emerald-200 dark:border-emerald-900">In Stock</span>
                                     @endif
                                 </td>
-                                <td class="px-8 py-4 text-right text-gray-600 dark:text-slate-400 w-1/4">
-                                    {{ $product->store_quantity }} left <span class="text-gray-400 font-normal hidden sm:inline">(ROP: {{ $product->reorder_point ?? '0' }})</span>
+
+                                <!-- Warehouse Status Badge -->
+                                <td class="px-6 py-4">
+                                    @if ($whStatus === 'Out of Stock')
+                                        <span class="inline-block bg-red-100 text-red-700 dark:bg-red-950 dark:text-rose-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-red-200 dark:border-rose-900">Out of Stock</span>
+                                    @elseif ($whStatus === 'Low Stock')
+                                        <span class="inline-block bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-amber-200 dark:border-amber-900">Low Stock</span>
+                                    @else
+                                        <span class="inline-block bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-emerald-200 dark:border-emerald-900">In Stock</span>
+                                    @endif
+                                </td>
+
+                                <!-- Total Status Badge -->
+                                <td class="px-6 py-4">
+                                    @if ($totalStatus === 'Out of Stock')
+                                        <span class="inline-block bg-red-100 text-red-700 dark:bg-red-950 dark:text-rose-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-red-200 dark:border-rose-900">Out of Stock</span>
+                                    @elseif ($totalStatus === 'Low Stock')
+                                        <span class="inline-block bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-amber-200 dark:border-amber-900">Low Stock</span>
+                                    @else
+                                        <span class="inline-block bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-emerald-200 dark:border-emerald-900">In Stock</span>
+                                    @endif
+                                </td>
+
+                                <!-- Current Level & ROP -->
+                                <td class="px-6 py-4 text-right text-gray-600 dark:text-slate-300 font-medium">
+                                    Store {{ $storeQty }} · WH {{ $whQty }} <span class="text-gray-400 text-xs block">(ROP: {{ $reorder }})</span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="px-8 py-12 text-center text-gray-400 dark:text-slate-500">
+                                <td colspan="6" class="px-8 py-12 text-center text-gray-400 dark:text-slate-500">
                                     No inventory alerts at this time. All products are well-stocked!
                                 </td>
                             </tr>
@@ -431,7 +467,7 @@
                 </table>
             </div>
 
-            {{-- Inventory Alerts Pagination (Conditional: shows only when pages > 1) --}}
+            {{-- Inventory Alerts Pagination --}}
             @if ($lowStockProducts->hasPages())
                 <div class="px-8 py-5 border-t-2 border-gray-200 dark:border-[#1e2536] flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500 dark:text-slate-400">
                     <div>

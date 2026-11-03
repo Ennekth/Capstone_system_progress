@@ -232,6 +232,20 @@
     </div>
 </aside>
 
+<script>
+    window.toggleDropdown = function(dropdownId, arrowId) {
+        const dropdown = document.getElementById(dropdownId);
+        const arrow = document.getElementById(arrowId);
+        
+        if (dropdown) {
+            dropdown.classList.toggle('hidden');
+        }
+        if (arrow) {
+            arrow.classList.toggle('rotate-180');
+        }
+    };
+</script>
+
 <style>
     /* Default expanded sidebar width */
     #sidebar {

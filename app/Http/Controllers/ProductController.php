@@ -29,7 +29,11 @@ class ProductController extends Controller
 
         // Status filter from Dashboard card click
         if ($request->get('status') === 'restock_needed') {
-            $query->whereRaw('(COALESCE(store_quantity, 0) + COALESCE(warehouse_quantity, 0)) <= COALESCE(reorder_point, 10)');
+            $query->where(function($q) {
+                $q->whereRaw('COALESCE(store_quantity, 0) <= COALESCE(reorder_point, 10)')
+                  ->orWhereRaw('COALESCE(warehouse_quantity, 0) <= COALESCE(reorder_point, 10)')
+                  ->orWhereRaw('(COALESCE(store_quantity, 0) + COALESCE(warehouse_quantity, 0)) <= COALESCE(reorder_point, 10)');
+            });
         }
 
         // Sorting
