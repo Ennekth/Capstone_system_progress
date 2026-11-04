@@ -39,7 +39,12 @@
                             @foreach ($cart as $id => $item)
                                 <tr class="py-4">
                                     <td class="py-4 font-semibold text-gray-900 dark:text-white">
-                                        {{ $item['product_name'] }}
+                                        <div>{{ $item['product_name'] }}</div>
+                                        <div class="text-[11px] text-gray-400 font-normal space-x-1.5 mt-0.5">
+                                            <span>SKU: <strong class="text-slate-600 dark:text-slate-300">{{ $item['product_sku'] ?? '—' }}</strong></span>
+                                            <span>•</span>
+                                            <span>Item SKU: <strong class="text-slate-600 dark:text-slate-300">{{ $item['item_sku'] ?? '—' }}</strong></span>
+                                        </div>
                                         @if(($item['item_discount_type'] ?? 'none') !== 'none' && ($item['item_discount_amount'] ?? 0) > 0)
                                             <div class="text-xs font-normal text-rose-600 dark:text-rose-400 mt-0.5">
                                                 Item Disc: -₱{{ number_format($item['item_discount_amount'], 2) }} ({{ (($item['item_discount_scope'] ?? 'whole') === 'per_item') ? 'Per Piece' : 'Whole Row' }})

@@ -28,7 +28,7 @@
         <!-- Search / Filter / Sort Form -->
         <div class="px-8 py-6 border-b-2 border-gray-200 dark:border-[#1e2536] bg-gray-50/50 dark:bg-[#161B26]/50">
             <form id="filterForm" method="GET" action="{{ route('admin.products.index') }}" class="flex flex-col sm:flex-row flex-wrap gap-4">
-                <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="Search products..." autocomplete="off"
+                <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="Search by name or product SKU..." autocomplete="off"
                        class="flex-1 min-w-[200px] rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-2.5 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500
                               focus:outline-none focus:border-slate-400">
 
@@ -38,11 +38,19 @@
                         <option value="{{ $category->id }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>
                             {{ $category->name }}
                         </option>
+                        @if($category->children && $category->children->count() > 0)
+                            @foreach($category->children as $child)
+                                <option value="{{ $child->id }}" {{ request('category_id') == $child->id ? 'selected' : '' }}>
+                                    &nbsp;&nbsp;&mdash; {{ $child->name }}
+                                </option>
+                            @endforeach
+                        @endif
                     @endforeach
                 </select>
 
                 <select name="sort" onchange="this.form.submit()" class="rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-2.5 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400 cursor-pointer">
                     <option value="product_name" {{ request('sort', 'product_name') === 'product_name' ? 'selected' : '' }}>Sort: Name</option>
+                    <option value="product_sku" {{ request('sort') === 'product_sku' ? 'selected' : '' }}>Sort: Product SKU</option>
                     <option value="store_quantity" {{ request('sort') === 'store_quantity' ? 'selected' : '' }}>Sort: Store Qty</option>
                     <option value="warehouse_quantity" {{ request('sort') === 'warehouse_quantity' ? 'selected' : '' }}>Sort: Warehouse Qty</option>
                     <option value="selling_price" {{ request('sort') === 'selling_price' ? 'selected' : '' }}>Sort: Price</option>
@@ -64,7 +72,7 @@
                     <thead class="bg-gray-50 dark:bg-[#161B26] text-gray-600 dark:text-slate-400 uppercase text-xs border-b-2 border-gray-200 dark:border-[#1e2536]">
                         <tr>
                             <th class="px-8 py-4">Product</th>
-                            <th class="px-8 py-4">SKU / Code</th>
+                            <th class="px-8 py-4">Product SKU</th>
                             <th class="px-8 py-4">Category</th>
                             <th class="px-8 py-4">Cost</th>
                             <th class="px-8 py-4">Price</th>
@@ -96,9 +104,8 @@
                                         <div class="text-xs text-gray-400 mt-0.5">{{ $product->approx_volume }}</div>
                                     @endif
                                 </td>
-                                <!-- Display SKU / Code -->
-                                <td class="px-8 py-4 font-mono text-xs text-gray-600 dark:text-slate-400">
-                                    {{ $product->code ?? '—' }}
+                                <td class="px-8 py-4 font-mono text-xs font-semibold text-gray-800 dark:text-slate-200">
+                                    {{ $product->product_sku ?? '—' }}
                                 </td>
                                 <td class="px-8 py-4 text-gray-600 dark:text-slate-400 font-medium">{{ $product->category->name ?? '—' }}</td>
                                 <td class="px-8 py-4 text-gray-600 dark:text-slate-400 font-semibold">
@@ -181,7 +188,7 @@
 
                             <div class="p-3">
                                 <p class="font-bold text-gray-900 dark:text-white text-xs line-clamp-1">{{ $product->product_name }}</p>
-                                <p class="text-[11px] font-mono text-gray-400 dark:text-slate-400 mt-0.5 truncate">SKU: {{ $product->code ?? '—' }}</p>
+                                <p class="text-[11px] font-mono text-gray-700 dark:text-slate-200 mt-0.5 truncate">SKU: {{ $product->product_sku ?? '—' }}</p>
                                 <p class="text-xs font-bold text-gray-900 dark:text-slate-100 mt-1.5">
                                     ₱{{ $product->selling_price !== null ? number_format($product->selling_price, 2) : '—' }}
                                 </p>
@@ -225,7 +232,13 @@
                             @method('PUT')
 
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Name</label>
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product SKU (Auto-Generated)</label>
+                                <input type="text" name="product_sku" value="{{ old('product_sku', $product->product_sku) }}" readonly 
+                                       class="w-full rounded-xl bg-gray-100 dark:bg-[#161B26]/60 border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed font-mono">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Name <span class="text-rose-500">*</span></label>
                                 <input type="text" name="product_name" value="{{ old('product_name', $product->product_name) }}" required 
                                        class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                             </div>
@@ -237,6 +250,11 @@
                                         <option value="">Uncategorized (default)</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                            @if($category->children && $category->children->count() > 0)
+                                                @foreach($category->children as $child)
+                                                    <option value="{{ $child->id }}" {{ old('category_id', $product->category_id) == $child->id ? 'selected' : '' }}>&nbsp;&nbsp;&mdash; {{ $child->name }}</option>
+                                                @endforeach
+                                            @endif
                                         @endforeach
                                     </select>
                                 </div>
@@ -249,41 +267,34 @@
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Volume (liters) <span class="text-gray-400 font-normal">(optional)</span></label>
-                                    <input type="number" step="0.01" name="volume_liters" value="{{ old('volume_liters', $product->volume_liters) }}" 
-                                           class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
-                                </div>
-                                <div>
                                     <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Purchase Cost</label>
                                     <input type="number" step="0.01" name="purchase_cost" value="{{ old('purchase_cost', $product->purchase_cost) }}" required 
                                            class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                                 </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Selling Price</label>
                                     <input type="number" step="0.01" name="selling_price" value="{{ old('selling_price', $product->selling_price) }}" required 
                                            class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                                 </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Store Quantity</label>
                                     <input type="number" name="store_quantity" value="{{ old('store_quantity', $product->store_quantity) }}" required 
                                            class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                                 </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Warehouse Quantity</label>
                                     <input type="number" name="warehouse_quantity" value="{{ old('warehouse_quantity', $product->warehouse_quantity) }}" required 
                                            class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Reorder Point <span class="text-gray-400 font-normal">(optional)</span></label>
-                                    <input type="number" name="reorder_point" value="{{ old('reorder_point', $product->reorder_point) }}" placeholder="e.g. 10" 
-                                           class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
-                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Reorder Point <span class="text-gray-400 font-normal">(optional)</span></label>
+                                <input type="number" name="reorder_point" value="{{ old('reorder_point', $product->reorder_point) }}" placeholder="e.g. 10" 
+                                       class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                             </div>
 
                             <div>
@@ -389,9 +400,9 @@
 
     </div>
 
-    <!-- Add Product Modal Popup (Themed to Match Categories Module UI) -->
+    <!-- Add Product Modal Popup -->
     <div id="addProductModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="relative w-full max-w-3xl bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-2xl p-8 transform transition-all text-left" onclick="event.stopPropagation()">
+        <div class="relative w-full max-w-2xl bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-2xl p-8 transform transition-all text-left" onclick="event.stopPropagation()">
             
             <div class="flex items-center justify-between pb-6 mb-6 border-b-2 border-gray-200 dark:border-[#1e2536]">
                 <h3 class="text-xl font-bold text-gray-900 dark:text-white">Add New Product</h3>
@@ -409,19 +420,30 @@
                     </div>
                 @endif
 
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product SKU (Auto-Generated)</label>
+                    <input type="text" id="modal_product_sku" name="product_sku" value="{{ old('product_sku') }}" readonly
+                           class="w-full rounded-xl bg-gray-100 dark:bg-[#161B26]/60 border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-500 dark:text-slate-400 cursor-not-allowed font-mono">
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Name</label>
+                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Product Name <span class="text-rose-500">*</span></label>
                         <input type="text" name="product_name" value="{{ old('product_name') }}" required placeholder="e.g. Purified Drinking Water"
                                class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Category <span class="text-gray-400 font-normal">(optional)</span></label>
-                        <select name="category_id" class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400 cursor-pointer">
+                        <select id="modal_category_select" name="category_id" onchange="generateProductSku()" class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400 cursor-pointer">
                             <option value="">Uncategorized (default)</option>
                             @foreach ($categories as $category)
                                 <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                                @if($category->children && $category->children->count() > 0)
+                                    @foreach($category->children as $child)
+                                        <option value="{{ $child->id }}" {{ old('category_id') == $child->id ? 'selected' : '' }}>&nbsp;&nbsp;&mdash; {{ $child->name }}</option>
+                                    @endforeach
+                                @endif
                             @endforeach
                         </select>
                     </div>
@@ -435,8 +457,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Volume (Liters) <span class="text-gray-400 font-normal">(Optional)</span></label>
-                        <input type="number" step="0.01" name="volume_liters" value="{{ old('volume_liters') }}" placeholder="e.g. 20"
+                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Reorder Point <span class="text-gray-400 font-normal">(Optional)</span></label>
+                        <input type="number" name="reorder_point" value="{{ old('reorder_point') }}" placeholder="e.g. 10"
                                class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                     </div>
                 </div>
@@ -455,7 +477,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Store Quantity</label>
                         <input type="number" name="store_quantity" value="{{ old('store_quantity', 0) }}" required
@@ -465,12 +487,6 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Warehouse Quantity</label>
                         <input type="number" name="warehouse_quantity" value="{{ old('warehouse_quantity', 0) }}" required
-                               class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase mb-1">Reorder Point <span class="text-gray-400 font-normal">(Optional)</span></label>
-                        <input type="number" name="reorder_point" value="{{ old('reorder_point') }}" placeholder="e.g. 10"
                                class="w-full rounded-xl bg-white dark:bg-[#161B26] border-2 border-gray-200 dark:border-[#1e2536] px-4 py-3 text-sm text-gray-900 dark:text-slate-100 focus:outline-none focus:border-slate-400">
                     </div>
                 </div>
@@ -510,9 +526,34 @@
 
 @push('scripts')
 <script>
+    function generateProductSku() {
+        const select = document.getElementById('modal_category_select');
+        let prefix = 'PRD';
+        
+        if (select && select.selectedOptions.length > 0) {
+            const text = select.selectedOptions[0].text.trim();
+            if (text && !text.includes('Uncategorized') && !text.includes('All Categories')) {
+                const cleaned = text.replace(/[^a-zA-Z]/g, '').toUpperCase();
+                if (cleaned.length >= 3) {
+                    prefix = cleaned.substring(0, 3);
+                } else if (cleaned.length > 0) {
+                    prefix = cleaned;
+                }
+            }
+        }
+
+        const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const productSkuInput = document.getElementById('modal_product_sku');
+
+        if (productSkuInput) {
+            productSkuInput.value = `${prefix}-${randomCode}`;
+        }
+    }
+
     function toggleAddProductModal(show) {
         const modal = document.getElementById('addProductModal');
         if (show) {
+            generateProductSku();
             modal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
         } else {

@@ -11,7 +11,8 @@ class Product extends Model
     use HasFactory, AuditsChanges;
 
     protected $fillable = [
-        'code',
+        'code',             // Base Product SKU[cite: 8]
+        'item_sku',         // Specific Product Item SKU[cite: 8]
         'product_name',
         'product_description',
         'purchase_cost',

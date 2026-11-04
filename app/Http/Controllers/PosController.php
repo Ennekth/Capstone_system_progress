@@ -140,6 +140,8 @@ class PosController extends Controller
                 } else {
                     $cart[$id] = [
                         'product_name' => $product->product_name,
+                        'product_sku'  => $product->product_sku,     
+                        'item_sku'     => $product->product_sku . '-ITM-01', 
                         'selling_price' => $product->selling_price,
                         'quantity' => $newCartQty,
                         'item_discount_type' => 'none',
@@ -243,7 +245,6 @@ class PosController extends Controller
         unset($parkedOrders[$index]);
         session()->put('parked_orders', array_values($parkedOrders));
 
-        // Redirect quietly without redundant flash messages
         return redirect()->route('pos');
     }
 
@@ -486,43 +487,52 @@ class PosController extends Controller
 
             foreach ($cart as $productId => $item) {
                 $product = Product::findOrFail($productId);
+                $totalQuantity = (int)$item['quantity'];
 
-                $baseItemSubtotal = $item['selling_price'] * $item['quantity'];
-                $itemDiscountAmount = 0;
-                
-                $discType = $item['item_discount_type'] ?? 'none';
-                $discVal = (float)($item['item_discount_value'] ?? 0);
-                $discScope = $item['item_discount_scope'] ?? 'whole';
+                // Loop through each physical unit individually so each gets its own sequential Item SKU record
+                for ($i = 1; $i <= $totalQuantity; $i++) {
+                    $unitPrice = $item['selling_price'];
+                    
+                    $unitDiscountAmount = 0;
+                    $discType = $item['item_discount_type'] ?? 'none';
+                    $discVal = (float)($item['item_discount_value'] ?? 0);
+                    $discScope = $item['item_discount_scope'] ?? 'whole';
 
-                if ($discType === 'percentage' && $discVal > 0) {
-                    $itemDiscountAmount = $baseItemSubtotal * ($discVal / 100);
-                } elseif ($discType === 'amount' && $discVal > 0) {
-                    if ($discScope === 'per_item') {
-                        $itemDiscountAmount = min($baseItemSubtotal, $discVal * $item['quantity']);
-                    } else {
-                        $itemDiscountAmount = min($baseItemSubtotal, $discVal);
+                    if ($discType === 'percentage' && $discVal > 0) {
+                        $unitDiscountAmount = $unitPrice * ($discVal / 100);
+                    } elseif ($discType === 'amount' && $discVal > 0) {
+                        if ($discScope === 'per_item') {
+                            $unitDiscountAmount = min($unitPrice, $discVal);
+                        } else {
+                            $unitDiscountAmount = min($unitPrice, $discVal / max(1, $totalQuantity));
+                        }
                     }
+
+                    $unitSubtotal = max(0, $unitPrice - $unitDiscountAmount);
+
+                    // Generate a distinct sequential item SKU per unit (e.g., -ITM-01, -ITM-02)
+                    $uniqueItemSku = $product->product_sku . '-ITM-' . str_pad($i, 2, '0', STR_PAD_LEFT);
+
+                    TransactionItem::create([
+                        'transaction_id' => $transaction->id,
+                        'product_id' => $product->id,
+                        'product_sku' => $product->product_sku,
+                        'item_sku' => $uniqueItemSku,
+                        'product_name' => $product->product_name,
+                        'selling_price' => $unitPrice,
+                        'quantity' => 1,
+                        'subtotal' => $unitSubtotal,
+                        'item_discount_type' => ($discType !== 'none' && $discVal > 0) ? $discType : null,
+                        'item_discount_value' => $discVal,
+                        'item_discount_scope' => ($discType !== 'none' && $discVal > 0) ? $discScope : null,
+                    ]);
                 }
-
-                $subtotalItem = max(0, $baseItemSubtotal - $itemDiscountAmount);
-
-                TransactionItem::create([
-                    'transaction_id' => $transaction->id,
-                    'product_id' => $product->id,
-                    'product_name' => $product->product_name,
-                    'selling_price' => $item['selling_price'],
-                    'quantity' => $item['quantity'],
-                    'subtotal' => $subtotalItem,
-                    'item_discount_type' => ($discType !== 'none' && $discVal > 0) ? $discType : null,
-                    'item_discount_value' => $discVal,
-                    'item_discount_scope' => ($discType !== 'none' && $discVal > 0) ? $discScope : null,
-                ]);
 
                 DemandRecord::create([
                     'product_id' => $product->id,
                     'transaction_id' => $transaction->id,
                     'record_date' => now()->toDateString(),
-                    'quantity' => $item['quantity'],
+                    'quantity' => $totalQuantity,
                     'source' => 'pos',
                 ]);
             }

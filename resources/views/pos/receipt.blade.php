@@ -47,7 +47,7 @@
                     </div>
                     <div class="flex justify-between">
                         <span>Cashier:</span>
-                        <span class="font-semibold text-gray-900 dark:text-white">{{ $transaction->user->name ?? 'System Administrator' }}</span>
+                        <span class="font-semibold text-gray-900 dark:text-white">{{ $transaction->user->name ?? ($transaction->user->firstname ?? 'System') . ' ' . ($transaction->user->lastname ?? '') }}</span>
                     </div>
                     @if(!empty($transaction->customer_name))
                         <div class="flex justify-between">
@@ -57,7 +57,7 @@
                     @endif
                 </div>
 
-                <!-- ITEMS LIST -->
+                <!-- ITEMS LIST WITH VERTICAL STACKED SKUS -->
                 <div class="py-3.5 border-b-2 border-dashed border-gray-200 dark:border-[#1e2536] space-y-3">
                     @php
                         $receiptItems = $transaction->items ?? $transaction->transactionItems ?? [];
@@ -86,11 +86,16 @@
                                 <span>{{ $item->quantity }}x {{ $item->product->product_name ?? $item->product_name ?? 'Item' }}</span>
                                 <span>₱{{ number_format($baseItemTotal, 2) }}</span>
                             </div>
-                            <div class="flex justify-between text-[10px] text-gray-500 pl-2">
+                            <!-- Vertical Stack for Product SKU and Item SKU -->
+                            <div class="text-[9px] text-gray-400 font-normal space-y-0.5 pl-0">
+                                <div>Product SKU: <strong class="text-slate-600 dark:text-slate-300">{{ $item->product_sku ?? '—' }}</strong></div>
+                                <div>Item SKU: <strong class="text-slate-600 dark:text-slate-300">{{ $item->item_sku ?? '—' }}</strong></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-gray-500 pl-0">
                                 <span>@ ₱{{ number_format($unitPrice, 2) }}/unit</span>
                             </div>
                             @if(strtolower($discType) !== 'none' && $discType != '' && $itemDiscount > 0)
-                                <div class="flex justify-between text-[10px] text-rose-600 dark:text-rose-400 pl-2 font-medium">
+                                <div class="flex justify-between text-[10px] text-rose-600 dark:text-rose-400 pl-0 font-medium">
                                     <span>Item Disc ({{ $scopeLabel }}):</span>
                                     <span>-₱{{ number_format($itemDiscount, 2) }}</span>
                                 </div>

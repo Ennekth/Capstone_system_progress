@@ -12,6 +12,8 @@ class TransactionItem extends Model
     protected $fillable = [
         'transaction_id',
         'product_id',
+        'product_sku',      // Permanent snapshot of Product SKU[cite: 9]
+        'item_sku',         // Permanent snapshot of Item SKU[cite: 9]
         'product_name',
         'selling_price',
         'quantity',
@@ -24,7 +26,7 @@ class TransactionItem extends Model
     protected $casts = [
         'selling_price' => 'decimal:2',
         'subtotal' => 'decimal:2',
-        'item_discount_value' => 'decimal:2', // Add this cast
+        'item_discount_value' => 'decimal:2',
     ];
 
     public function transaction()

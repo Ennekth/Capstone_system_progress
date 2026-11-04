@@ -20,6 +20,29 @@
         <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data" class="space-y-4">
             @csrf
 
+            <!-- Product SKU & Item SKU Fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="product_sku" class="block text-sm font-medium text-gray-700 mb-1">
+                        Product SKU <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="product_sku" id="product_sku" value="{{ old('product_sku') }}" required
+                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                                  focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800"
+                           placeholder="e.g. SKU-PROD-001">
+                </div>
+
+                <div>
+                    <label for="item_sku" class="block text-sm font-medium text-gray-700 mb-1">
+                        Item SKU <span class="text-gray-400">(optional)</span>
+                    </label>
+                    <input type="text" name="item_sku" id="item_sku" value="{{ old('item_sku') }}"
+                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                                  focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-gray-800"
+                           placeholder="e.g. SKU-ITEM-001">
+                </div>
+            </div>
+
             <div>
                 <label for="product_name" class="block text-sm font-medium text-gray-700 mb-1">
                     Product Name
