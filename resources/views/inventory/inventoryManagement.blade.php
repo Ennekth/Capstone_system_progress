@@ -10,18 +10,6 @@
 
     <h1 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Inventory Management</h1>
 
-    @if (session('error'))
-        <div class="mb-6 rounded-2xl bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-rose-300 border-2 border-red-200 dark:border-rose-900 px-6 py-4 text-sm font-medium">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    @if (session('success'))
-        <div class="mb-6 rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-2 border-emerald-200 dark:border-emerald-900 px-6 py-4 text-sm font-medium">
-            {{ session('success') }}
-        </div>
-    @endif
-
     <div class="bg-white dark:bg-[#10141D] border-2 border-gray-200 dark:border-[#1e2536] rounded-3xl shadow-sm overflow-hidden mb-8">
 
         <div class="px-8 py-6 border-b-2 border-gray-200 dark:border-[#1e2536]">
@@ -309,24 +297,17 @@
         const restockId = isCard ? `card-restock-${productId}` : `restock-${productId}`;
         const transferId = isCard ? `card-transfer-${productId}` : `transfer-${productId}`;
 
-        const restockEl = document.getElementById(restockId);
-        const transferEl = document.getElementById(transferId);
+        const targetEl = actionType.includes('restock') ? document.getElementById(restockId) : document.getElementById(transferId);
+        const isTargetHidden = targetEl && targetEl.classList.contains('hidden');
 
-        const targetEl = actionType.includes('restock') ? restockEl : transferEl;
-        const otherEl = actionType.includes('restock') ? transferEl : restockEl;
+        // Close ALL open restock and transfer forms across the entire page first
+        document.querySelectorAll('[id^="restock-"], [id^="transfer-"], [id^="card-restock-"], [id^="card-transfer-"]').forEach(el => {
+            el.classList.add('hidden');
+        });
 
-        if (targetEl) {
-            const isTargetHidden = targetEl.classList.contains('hidden');
-            
-            if (otherEl) {
-                otherEl.classList.add('hidden');
-            }
-
-            if (isTargetHidden) {
-                targetEl.classList.remove('hidden');
-            } else {
-                targetEl.classList.add('hidden');
-            }
+        // If the clicked target was hidden, open it now
+        if (targetEl && isTargetHidden) {
+            targetEl.classList.remove('hidden');
         }
     }
 
